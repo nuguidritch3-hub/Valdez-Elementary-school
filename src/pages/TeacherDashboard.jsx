@@ -18,6 +18,18 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [saving, setSaving] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
+  // Prepared Exams State
+  const [examsList, setExamsList] = useState([
+    { id: 1, title: 'Q1 Midterm Exam', date: 'March 15, 2026', type: 'Multiple Choice' },
+    { id: 2, title: 'Reading Comprehension', date: 'March 22, 2026', type: 'Essay' },
+    { id: 3, title: 'Math Quiz 4', date: 'April 02, 2026', type: 'Problem Solving' },
+    { id: 4, title: 'Science Finals', date: 'April 10, 2026', type: 'Mixed' }
+  ]);
+  const [createExamModalOpen, setCreateExamModalOpen] = useState(false);
+  const [newExamTitle, setNewExamTitle] = useState('');
+  const [newExamDate, setNewExamDate] = useState('');
+  const [newExamType, setNewExamType] = useState('Multiple Choice');
+
   useEffect(() => {
     setTimeout(() => setMountedAnim(true), 100);
     const fetchData = async () => {
@@ -88,12 +100,32 @@ const TeacherDashboard = ({ user, onLogout }) => {
     class: `td-rank-${idx + 2}`
   }));
 
-  const exams = [
-    { id: 1, title: 'Q1 Midterm Exam', date: 'March 15, 2026', type: 'Multiple Choice' },
-    { id: 2, title: 'Reading Comprehension', date: 'March 22, 2026', type: 'Essay' },
-    { id: 3, title: 'Math Quiz 4', date: 'April 02, 2026', type: 'Problem Solving' },
-    { id: 4, title: 'Science Finals', date: 'April 10, 2026', type: 'Mixed' }
-  ];
+  const formatDateString = (dateStr) => {
+    if (!dateStr) return '';
+    const dateObj = new Date(dateStr);
+    if (isNaN(dateObj.getTime())) return dateStr;
+    return dateObj.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+  };
+
+  const handleCreateExam = (e) => {
+    if (e) e.preventDefault();
+    if (!newExamTitle.trim() || !newExamDate) return;
+    
+    const newExam = {
+      id: examsList.length + 1,
+      title: newExamTitle.trim(),
+      date: formatDateString(newExamDate),
+      type: newExamType
+    };
+    
+    setExamsList(prev => [...prev, newExam]);
+    setCreateExamModalOpen(false);
+    
+    // Reset form fields
+    setNewExamTitle('');
+    setNewExamDate('');
+    setNewExamType('Multiple Choice');
+  };
 
   const [modalViewType, setModalViewType] = useState('grades');
 
@@ -333,10 +365,10 @@ const TeacherDashboard = ({ user, onLogout }) => {
     <div className="td-left-panel" style={{ width: '100%', flex: 'none', height: '100%' }}>
       <div className="td-panel-header">
         <h1 className="td-panel-title">Prepared Exams</h1>
-        <button className="td-btn td-btn-primary">+ Create Exam</button>
+        <button className="td-btn td-btn-primary" onClick={() => setCreateExamModalOpen(true)}>+ Create Exam</button>
       </div>
       <div className="td-exams-grid">
-        {exams.map(exam => (
+        {examsList.map(exam => (
           <div key={exam.id} className="td-exam-card">
             <div className="td-exam-icon"><FileText size={24} /></div>
             <div>
@@ -550,6 +582,68 @@ const TeacherDashboard = ({ user, onLogout }) => {
         </div>
       )}
       <ShareModal isOpen={shareModalOpen} onClose={() => setShareModalOpen(false)} role="Teacher" />
+
+      {/* ── Create Exam Modal ── */}
+      {createExamModalOpen && (
+        <div className="td-modal-overlay" onClick={() => setCreateExamModalOpen(false)}>
+          <div className="td-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="td-modal-header">
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f1011', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={24} /> Create Prepared Exam
+              </h2>
+              <X className="td-modal-close" onClick={() => setCreateExamModalOpen(false)} />
+            </div>
+            
+            <form onSubmit={handleCreateExam} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="td-settings-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>Exam Title</label>
+                <input
+                  type="text"
+                  className="td-settings-input"
+                  placeholder="e.g. Science Midterm Exam"
+                  value={newExamTitle}
+                  onChange={(e) => setNewExamTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="td-settings-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>Exam Date</label>
+                <input
+                  type="date"
+                  className="td-settings-input"
+                  value={newExamDate}
+                  onChange={(e) => setNewExamDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="td-settings-group" style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>Exam Type</label>
+                <select
+                  className="td-settings-input"
+                  value={newExamType}
+                  onChange={(e) => setNewExamType(e.target.value)}
+                >
+                  <option value="Multiple Choice">Multiple Choice</option>
+                  <option value="Essay">Essay</option>
+                  <option value="Problem Solving">Problem Solving</option>
+                  <option value="Mixed">Mixed</option>
+                </select>
+              </div>
+
+              <div className="td-modal-actions" style={{ marginTop: '0' }}>
+                <button type="button" className="td-btn td-btn-secondary" onClick={() => setCreateExamModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="td-btn td-btn-primary">
+                  Create Exam
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
