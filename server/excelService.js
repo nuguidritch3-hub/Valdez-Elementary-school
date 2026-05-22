@@ -168,6 +168,8 @@ class ExcelService {
           schoolYears[currentSY].totalStudents = Number(row[1]) || 0;
           schoolYears[currentSY].totalRepeaters = Number(row[2]) || 0;
           schoolYears[currentSY].totalDropouts = Number(row[3]) || 0;
+          schoolYears[currentSY].totalClassrooms = Number(row[4]) || 0;
+          schoolYears[currentSY].totalSeats = Number(row[5]) || 0;
           schoolYears[currentSY].totalTeachers = Number(row[6]) || 0;
           parsingGrades = false;
           continue;
@@ -301,8 +303,8 @@ class ExcelService {
     syData.totalRepeaters = totalRepeaters;
     syData.totalDropouts = totalDropouts;
     
-    // Update active teachers count based on rooms
-    syData.totalTeachers = syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0);
+    // Update active teachers count based on rooms + 1 relieving teacher
+    syData.totalTeachers = syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0) + 1;
     
     // Also update high-level db summaries
     this.db.schoolData.totalStudents = totalStudents;
@@ -350,14 +352,18 @@ class ExcelService {
           ]);
         }
 
-        summaryRows.push([ 'RELIEVING TEACHER', '', '', '', '', '', 1 ]);
+        const relieving = syData.totalTeachers !== undefined 
+          ? Math.max(0, syData.totalTeachers - syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0)) 
+          : (syData.schoolYear === 'S.Y. 2021-2022' ? 0 : 1);
+          
+        summaryRows.push([ 'RELIEVING TEACHER', '', '', '', '', '', relieving ]);
         summaryRows.push([
           'TOTAL',
           syData.totalStudents,
           syData.totalRepeaters,
           syData.totalDropouts,
-          15, // functional classrooms total
-          461, // seats total
+          syData.totalClassrooms || 15,
+          syData.totalSeats || 461,
           syData.totalTeachers
         ]);
         summaryRows.push([]);

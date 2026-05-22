@@ -123,6 +123,8 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [addTeacherError, setAddTeacherError] = useState('');
   const [showCampusModal, setShowCampusModal] = useState(false);
   const [showInsightsModal, setShowInsightsModal] = useState(false);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  const [enrollmentModalYear, setEnrollmentModalYear] = useState('S.Y. 2025-2026');
   const [insightsFilter, setInsightsFilter] = useState('All');
   const [insightsSearch, setInsightsSearch] = useState('');
 
@@ -632,7 +634,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         </div>
 
         <div className="rep-premium-kpis">
-          <div className="rep-premium-kpi-card">
+          <div className="rep-premium-kpi-card clickable-kpi-card" onClick={() => { setShowEnrollmentModal(true); setEnrollmentModalYear(selectedYear); }} style={{ cursor: 'pointer' }}>
             <div className="rep-premium-kpi-top">
               <div className="rep-premium-kpi-icon" style={{color: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)'}}><Users size={16}/></div>
               <div className="rep-premium-trend-badge up"><ArrowUpIcon/> +{Math.abs(enrollmentGrowth)}%</div>
@@ -3880,6 +3882,146 @@ const AdminDashboard = ({ user, onLogout }) => {
               {/* Right Side: Map */}
               <div style={{ flex: 1, backgroundColor: '#1E293B', position: 'relative' }}>
                 <iframe src="https://www.google.com/maps/embed?pb=!3m2!1sen!2sph!4v1779170860597!5m2!1sen!2sph!6m8!1m7!1szEc29c1XrMKd0OTJUkV46g!2m2!1d14.98525023648257!2d120.5392525055562!3f178.47472142220045!4f-15.57242978303492!5f0.7820865974627469" width="100%" height="100%" style={{border:0, position: 'absolute', top: 0, left: 0}} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TOTAL ENROLLMENT DETAILS MODAL ─── */}
+      {showEnrollmentModal && (
+        <div className="rep-compare-modal-overlay" onClick={() => setShowEnrollmentModal(false)} style={{ zIndex: 600 }}>
+          <div
+            className="rep-enrollment-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="rep-enrollment-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
+                  <Users size={20} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#F1F5F9' }}>
+                    Enrollment & Facility Details
+                  </h2>
+                  <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748B' }}>
+                    Grade-level breakdown of enrollment, classrooms, seats, and teachers.
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowEnrollmentModal(false)} className="rep-insights-close-btn">
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="rep-enrollment-modal-content">
+              {/* Year Selector Control */}
+              <div className="rep-enrollment-year-picker">
+                <span style={{ fontSize: '14px', fontWeight: '600', color: '#CBD5E1' }}>Select Academic Year:</span>
+                <div className="rep-enrollment-year-tabs">
+                  {globalYears.map(year => (
+                    <button
+                      key={year}
+                      className={`rep-enrollment-year-btn ${enrollmentModalYear === year ? 'active' : ''}`}
+                      onClick={() => setEnrollmentModalYear(year)}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Responsive Table Card */}
+              <div className="rep-enrollment-table-card">
+                <div className="rep-enrollment-table-header-bar">
+                  <span>{enrollmentModalYear} Statistics</span>
+                </div>
+                <div className="rep-enrollment-table-wrapper">
+                  <table className="rep-enrollment-table">
+                    <thead>
+                      <tr>
+                        <th>Grade Level</th>
+                        <th>BOSY Enrollment</th>
+                        <th>Number of Repeaters</th>
+                        <th>Number of Dropouts</th>
+                        <th>Number of Functional Classrooms</th>
+                        <th>Number of Seats</th>
+                        <th>Number of Teachers</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const syData = data?.schoolYears?.[enrollmentModalYear] || {};
+                        const classroomsList = syData.classrooms || [];
+                        
+                        // Sort classrooms to ensure: Kinder, Grade 1, Grade 2, ...
+                        const order = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+                        const sortedClassrooms = [...classroomsList].sort((a, b) => {
+                          return order.indexOf(a.gradeLevel) - order.indexOf(b.gradeLevel);
+                        });
+
+                        // Calculate totals
+                        const totalStudents = sortedClassrooms.reduce((sum, c) => sum + (c.enrollment || 0), 0);
+                        const totalRepeaters = sortedClassrooms.reduce((sum, c) => sum + (c.repeaters || 0), 0);
+                        const totalDropouts = sortedClassrooms.reduce((sum, c) => sum + (c.dropouts || 0), 0);
+                        
+                        // Functional Classrooms Total
+                        const classroomsTotalCount = syData.totalClassrooms || sortedClassrooms.reduce((sum, c) => {
+                          const num = parseInt(c.classrooms);
+                          return sum + (isNaN(num) ? 0 : num);
+                        }, 0);
+
+                        // Seats Total
+                        const seatsTotalCount = syData.totalSeats || sortedClassrooms.reduce((sum, c) => {
+                          const num = parseInt(c.seats);
+                          return sum + (isNaN(num) ? 0 : num);
+                        }, 0);
+
+                        const totalTeachersCount = syData.totalTeachers || (sortedClassrooms.reduce((sum, c) => sum + (c.teachers || 0), 0) + (enrollmentModalYear === 'S.Y. 2021-2022' ? 0 : 1));
+                        
+                        const relievingTeachersCount = Math.max(0, totalTeachersCount - sortedClassrooms.reduce((sum, c) => sum + (c.teachers || 0), 0));
+
+                        return (
+                          <>
+                            {sortedClassrooms.map((row, idx) => (
+                              <tr key={idx}>
+                                <td className="font-semibold">{row.gradeLevel.toUpperCase()}</td>
+                                <td>{row.enrollment}</td>
+                                <td>{row.repeaters}</td>
+                                <td>{row.dropouts}</td>
+                                <td>{row.classrooms}</td>
+                                <td>{row.seats}</td>
+                                <td>{row.teachers}</td>
+                              </tr>
+                            ))}
+                            {/* Relieving Teacher Row */}
+                            <tr className="relieving-teacher-row">
+                              <td className="font-semibold">RELIEVING TEACHER</td>
+                              <td className="disabled-cell"></td>
+                              <td className="disabled-cell"></td>
+                              <td className="disabled-cell"></td>
+                              <td className="disabled-cell"></td>
+                              <td className="disabled-cell"></td>
+                              <td>{relievingTeachersCount}</td>
+                            </tr>
+                            {/* Total Row */}
+                            <tr className="total-row">
+                              <td className="font-bold">TOTAL</td>
+                              <td className="font-bold">{totalStudents}</td>
+                              <td className="font-bold">{totalRepeaters}</td>
+                              <td className="font-bold">{totalDropouts}</td>
+                              <td className="font-bold">{classroomsTotalCount}</td>
+                              <td className="font-bold">{seatsTotalCount}</td>
+                              <td className="font-bold">{totalTeachersCount}</td>
+                            </tr>
+                          </>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
