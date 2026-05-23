@@ -9,7 +9,7 @@ import {
   ClipboardList, LogOut, Search, Settings, Bell, ChevronDown, MoreHorizontal,
   Award, Briefcase, ChevronLeft, ChevronRight, Check, UserCheck, X, UserPlus,
   Moon, Sun, BarChart2, TrendingUp, TrendingDown, AlertCircle, Lightbulb, Clock, Trash2, Edit,
-  Menu
+  Menu, UserX
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { getApiUrl } from '../config';
@@ -128,24 +128,42 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [insightsFilter, setInsightsFilter] = useState('All');
   const [insightsSearch, setInsightsSearch] = useState('');
 
+  // Classroom Size Modal State
+  const [showClassroomSizeModal, setShowClassroomSizeModal] = useState(false);
+
   // Year Comparison Modal States
   const [showCompareYearModal, setShowCompareYearModal] = useState(false);
-  const [compareYearPrimary, setCompareYearPrimary] = useState('S.Y. 2025-2026');
-  const [compareYearSecondary, setCompareYearSecondary] = useState('S.Y. 2024-2025');
-  const [compareYearMonthlyTab, setCompareYearMonthlyTab] = useState('S.Y. 2025-2026');
+  const [compareSelectedYears, setCompareSelectedYears] = useState([]);
+  const [compareYearMonthlyTab, setCompareYearMonthlyTab] = useState('');
+
+  // Keep backward-compat helpers
+  const compareYearPrimary = compareSelectedYears[0] || '';
+  const compareYearSecondary = compareSelectedYears[1] || '';
+
+  const COMPARE_YEAR_COLORS = ['#3B82F6', '#8B5CF6', '#F97316', '#10B981', '#EF4444', '#EC4899', '#06B6D4', '#F59E0B'];
 
   useEffect(() => {
     if (data?.schoolYears) {
       const sortedYears = Object.keys(data.schoolYears).sort().reverse();
-      if (sortedYears.length > 0) {
-        setCompareYearPrimary(sortedYears[0]);
-        setCompareYearMonthlyTab(sortedYears[0]);
-      }
-      if (sortedYears.length > 1) {
-        setCompareYearSecondary(sortedYears[1]);
+      if (sortedYears.length > 0 && compareSelectedYears.length === 0) {
+        const initial = sortedYears.slice(0, Math.min(2, sortedYears.length));
+        setCompareSelectedYears(initial);
+        setCompareYearMonthlyTab(initial[0]);
       }
     }
   }, [data]);
+
+  const toggleCompareYear = (sy) => {
+    setCompareSelectedYears(prev => {
+      if (prev.includes(sy)) {
+        if (prev.length <= 1) return prev; // keep at least 1
+        const next = prev.filter(y => y !== sy);
+        if (compareYearMonthlyTab === sy) setCompareYearMonthlyTab(next[0]);
+        return next;
+      }
+      return [...prev, sy];
+    });
+  };
 
   const getShortYear = (syKey) => {
     if (!syKey) return '';
@@ -170,20 +188,26 @@ const AdminDashboard = ({ user, onLogout }) => {
     };
   };
 
-  const getMultiYearSummaryText = (pYear, sYear) => {
-    const pData = data?.schoolYears?.[pYear] || {};
-    const sData = data?.schoolYears?.[sYear] || {};
-    const pStudents = pData.totalStudents || 0;
-    const sStudents = sData.totalStudents || 0;
-    const pShort = getShortYear(pYear);
-    const sShort = getShortYear(sYear);
+  const getMultiYearSummaryText = (years) => {
+    if (!years || years.length < 2) return 'Select at least 2 years to see a multi-year summary.';
+    const sorted = [...years].sort();
+    const oldest = sorted[0];
+    const newest = sorted[sorted.length - 1];
+    const oldData = data?.schoolYears?.[oldest] || {};
+    const newData = data?.schoolYears?.[newest] || {};
+    const oldStudents = oldData.totalStudents || 0;
+    const newStudents = newData.totalStudents || 0;
+    const oldShort = getShortYear(oldest);
+    const newShort = getShortYear(newest);
+    const diff = newStudents - oldStudents;
+    const yearNames = sorted.map(y => getShortYear(y)).join(', ');
     
-    if (pStudents > sStudents) {
-      return `Ultimately, comparing the two years shows a positive enrollment growth of +${pStudents - sStudents} students from ${sShort} to ${pShort}, indicating strong community interest and improved student retention.`;
-    } else if (pStudents < sStudents) {
-      return `Ultimately, comparing the two periods shows an enrollment stabilization with a change of -${sStudents - pStudents} students from ${sShort} to ${pShort}. This allows the administration to focus on improving infrastructure and reducing student-to-teacher ratios.`;
+    if (diff > 0) {
+      return `Across ${years.length} years (${yearNames}), enrollment grew by +${diff} students from ${oldShort} to ${newShort}, indicating strong community interest and improved student retention.`;
+    } else if (diff < 0) {
+      return `Across ${years.length} years (${yearNames}), enrollment shifted by ${diff} students from ${oldShort} to ${newShort}. This allows the administration to focus on improving infrastructure and reducing student-to-teacher ratios.`;
     } else {
-      return `Ultimately, comparing the two years shows a highly stable student enrollment at exactly ${pStudents} students, facilitating long-term resource planning and curriculum standardizations.`;
+      return `Across ${years.length} years (${yearNames}), enrollment remained stable at ${newStudents} students, facilitating long-term resource planning and curriculum standardizations.`;
     }
   };
 
@@ -233,52 +257,20 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
   };
 
-  const getGradeComparisonChartData = (pYear, sYear) => {
-    const pData = data?.schoolYears?.[pYear] || {};
-    const sData = data?.schoolYears?.[sYear] || {};
-    
+  const getGradeComparisonChartData = (years) => {
     const grades = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
     
     return grades.map(grade => {
-      const pClass = pData.classrooms?.find(c => c.gradeLevel === grade) || {};
-      const sClass = sData.classrooms?.find(c => c.gradeLevel === grade) || {};
-      
-      const pEnrollment = pClass.enrollment || 0;
-      const sEnrollment = sClass.enrollment || 0;
-      
-      return {
-        name: grade,
-        [pYear]: pEnrollment,
-        [sYear]: sEnrollment
-      };
+      const row = { name: grade };
+      years.forEach(sy => {
+        const syData = data?.schoolYears?.[sy] || {};
+        const cls = syData.classrooms?.find(c => c.gradeLevel === grade) || {};
+        row[sy] = cls.enrollment || 0;
+      });
+      return row;
     });
   };
 
-  const schoolInsights = [
-    { id: 1, type: 'warning', section: 'Grade 6 - Sampaguita', title: 'High Absenteeism Rate', description: 'Absenteeism is 15% above target. Consider parent-teacher interventions and home visitation programs.', time: 'Today', impact: 'HIGH' },
-    { id: 2, type: 'success', section: 'Grade 1 - Mabini', title: 'Strong Enrollment Growth', description: 'Next year\'s enrollment is projected to exceed targets by 12% based on current trends. Great work from the admissions team.', time: 'Yesterday', impact: 'MEDIUM' },
-    { id: 3, type: 'idea', section: 'Grade 4 - Aguinaldo', title: 'Resource Optimization', description: 'Underutilized classrooms detected. Consider consolidating sections to optimize teacher allocation.', time: '2 Days Ago', impact: 'HIGH' },
-    { id: 4, type: 'warning', section: 'Kinder - Section A', title: 'Low Reading Proficiency', description: 'Reading proficiency dropped to 68%. Re-evaluate literacy programs and schedule remedial reading sessions.', time: 'Today', impact: 'MEDIUM' },
-    { id: 5, type: 'success', section: 'Grade 3 - Del Pilar', title: 'Excellent Math Scores', description: 'Average math scores reached 92/100 consistently over the past quarterly exam. Outstanding teaching methodology.', time: '3 Days Ago', impact: 'HIGH' },
-    { id: 6, type: 'warning', section: 'Grade 5 - Gomez', title: 'Elevated Dropout Risk', description: 'Average attendance dropped significantly. Check for socioeconomic factors or temporary family issues.', time: 'Yesterday', impact: 'HIGH' },
-    { id: 7, type: 'idea', section: 'Grade 2 - Rizal', title: 'Digital Learning Opportunity', description: 'Local tech partners expressed interest in donating tablets. Follow up to secure long-term digital learning resources.', time: 'Today', impact: 'MEDIUM' },
-    { id: 8, type: 'success', section: 'All Sections', title: 'Compliance Audit Passed', description: 'School passed the DepEd compliance audit with flying colors (98/100). All documentation is up to date.', time: '1 Week Ago', impact: 'LOW' },
-    { id: 9, type: 'idea', section: 'School-Wide', title: 'Standardize Assessment Tools', description: 'Grading variances across sections noticed. Suggesting a unified rubric rollout for Q4 exams.', time: '2 Weeks Ago', impact: 'HIGH' },
-    { id: 10, type: 'idea', section: 'Grade 1 - Bonifacio', title: 'AI-Assisted Tutoring', description: 'Implement AI-driven adaptive learning modules to personalize instruction and reduce remedial class load by 25%.', time: 'Today', impact: 'MEDIUM' },
-  ];
-
-  const filteredInsights = schoolInsights.filter(i => {
-    const typeMatch = insightsFilter === 'All' || i.type === insightsFilter.toLowerCase();
-    const searchMatch = insightsSearch === '' || i.title.toLowerCase().includes(insightsSearch.toLowerCase()) || i.section.toLowerCase().includes(insightsSearch.toLowerCase()) || i.description.toLowerCase().includes(insightsSearch.toLowerCase());
-    return typeMatch && searchMatch;
-  });
-
-  const insightCounts = {
-    total: schoolInsights.length,
-    warnings: schoolInsights.filter(i => i.type === 'warning').length,
-    successes: schoolInsights.filter(i => i.type === 'success').length,
-    ideas: schoolInsights.filter(i => i.type === 'idea').length,
-  };
 
   const [lastDataVersion, setLastDataVersion] = useState(null);
 
@@ -470,6 +462,36 @@ const AdminDashboard = ({ user, onLogout }) => {
   const supportStaff = data?.users?.filter(u => u.role !== 'Teacher' && u.role !== 'Student').length || 34;
   const totalAwards = 152;
 
+  const schoolInsights = [
+    { id: 1, type: 'warning', section: 'Grade 6 - Sampaguita', title: 'High Absenteeism Rate', description: 'Absenteeism is 15% above target. Consider parent-teacher interventions and home visitation programs.', time: 'Today', impact: 'HIGH' },
+    { id: 2, type: 'success', section: 'Grade 1 - Mabini', title: 'Strong Enrollment Growth', description: 'Next year\'s enrollment is projected to exceed targets by 12% based on current trends. Great work from the admissions team.', time: 'Yesterday', impact: 'MEDIUM' },
+    { id: 3, type: 'idea', section: 'Grade 4 - Aguinaldo', title: 'Resource Optimization', description: 'Underutilized classrooms detected. Consider consolidating sections to optimize teacher allocation.', time: '2 Days Ago', impact: 'HIGH' },
+    { id: 4, type: 'warning', section: 'Kinder - Section A', title: 'Low Reading Proficiency', description: 'Reading proficiency dropped to 68%. Re-evaluate literacy programs and schedule remedial reading sessions.', time: 'Today', impact: 'MEDIUM' },
+    { id: 5, type: 'success', section: 'Grade 3 - Del Pilar', title: 'Excellent Math Scores', description: 'Average math scores reached 92/100 consistently over the past quarterly exam. Outstanding teaching methodology.', time: '3 Days Ago', impact: 'HIGH' },
+    { id: 6, type: 'warning', section: 'Grade 5 - Gomez', title: 'Elevated Dropout Risk', description: `Currently ${totalDropouts} student(s) have dropped out this school year. Dropout prevention is critical — every student lost impacts the school's completion rate, DepEd performance indicators, and the child's future opportunities. Immediate home visitation and counseling are recommended.`, time: 'Yesterday', impact: 'HIGH' },
+    { id: 7, type: 'idea', section: 'Grade 2 - Rizal', title: 'Digital Learning Opportunity', description: 'Local tech partners expressed interest in donating tablets. Follow up to secure long-term digital learning resources.', time: 'Today', impact: 'MEDIUM' },
+    { id: 8, type: 'success', section: 'All Sections', title: 'Compliance Audit Passed', description: 'School passed the DepEd compliance audit with flying colors (98/100). All documentation is up to date.', time: '1 Week Ago', impact: 'LOW' },
+    { id: 9, type: 'idea', section: 'School-Wide', title: 'Standardize Assessment Tools', description: 'Grading variances across sections noticed. Suggesting a unified rubric rollout for Q4 exams.', time: '2 Weeks Ago', impact: 'HIGH' },
+    { id: 10, type: 'idea', section: 'Grade 1 - Bonifacio', title: 'AI-Assisted Tutoring', description: 'Implement AI-driven adaptive learning modules to personalize instruction and reduce remedial class load by 25%.', time: 'Today', impact: 'MEDIUM' },
+    { id: 11, type: 'warning', section: 'School-Wide', title: 'Dropout Early Warning Signs', description: `${totalDropouts} dropout(s) recorded so far. Studies show that chronic absenteeism (missing 10%+ of school days), failing grades, and disengagement are the top 3 early warning signs. Teachers should flag at-risk students immediately for intervention.`, time: 'Today', impact: 'HIGH' },
+    { id: 12, type: 'idea', section: 'School-Wide', title: 'Dropout Prevention Program', description: 'Implement a structured dropout prevention program: (1) Weekly attendance monitoring, (2) Parent-teacher home visits for absent students, (3) Financial assistance referrals for families in need, (4) Peer mentoring and after-school support programs. Early intervention can reduce dropout rates by up to 40%.', time: 'Today', impact: 'HIGH' },
+    { id: 13, type: 'warning', section: 'School-Wide', title: 'Dropout Impact on School Performance', description: `With ${totalDropouts} dropout(s), the school completion rate is affected. DepEd tracks dropout rates as a key performance metric — high dropout rates may result in lower school ratings, reduced MOOE allocation, and required corrective action plans. Every student retained strengthens the school's standing.`, time: 'Today', impact: 'HIGH' },
+    { id: 14, type: 'success', section: 'School-Wide', title: 'Dropout Rate Below National Average', description: `The current dropout count of ${totalDropouts} keeps Valdez Elementary below the national average dropout rate of 2.5%. Continued monitoring and proactive interventions are essential to maintain this positive trend and ensure every child completes their elementary education.`, time: 'This Week', impact: 'MEDIUM' },
+  ];
+
+  const filteredInsights = schoolInsights.filter(i => {
+    const typeMatch = insightsFilter === 'All' || i.type === insightsFilter.toLowerCase();
+    const searchMatch = insightsSearch === '' || i.title.toLowerCase().includes(insightsSearch.toLowerCase()) || i.section.toLowerCase().includes(insightsSearch.toLowerCase()) || i.description.toLowerCase().includes(insightsSearch.toLowerCase());
+    return typeMatch && searchMatch;
+  });
+
+  const insightCounts = {
+    total: schoolInsights.length,
+    warnings: schoolInsights.filter(i => i.type === 'warning').length,
+    successes: schoolInsights.filter(i => i.type === 'success').length,
+    ideas: schoolInsights.filter(i => i.type === 'idea').length,
+  };
+
   const dynamicGenderData = () => {
     const total = totalStudents || 502;
     const ratio = 560 / 1245;
@@ -629,7 +651,8 @@ const AdminDashboard = ({ user, onLogout }) => {
 
     return (
       <div className="rep-content-scroll rep-premium-analytics">
-        <div className="rep-premium-analytics-header" style={{justifyContent: 'flex-end'}}>
+        <div className="rep-premium-analytics-header" style={{justifyContent: 'flex-end', gap: '12px'}}>
+          <button className="rep-dropdown" onClick={() => setShowClassroomSizeModal(true)}>Classroom Size</button>
           <button className="rep-dropdown" onClick={() => setShowCompareYearModal(true)}>Compare Year <ChevronDown size={14}/></button>
         </div>
 
@@ -656,12 +679,12 @@ const AdminDashboard = ({ user, onLogout }) => {
           </div>
           <div className="rep-premium-kpi-card">
             <div className="rep-premium-kpi-top">
-              <div className="rep-premium-kpi-icon" style={{color: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.1)'}}><TrendingUp size={16}/></div>
-              <div className="rep-premium-trend-badge up"><ArrowUpIcon/> +2.5%</div>
+              <div className="rep-premium-kpi-icon" style={{color: '#EF4444', backgroundColor: 'rgba(239,68,68,0.1)'}}><UserX size={16}/></div>
+              <div className={`rep-premium-trend-badge ${dropoutChange >= 0 ? 'down' : 'up'}`}>{dropoutChange >= 0 ? <ArrowDownIcon/> : <ArrowUpIcon/>} {dropoutChange >= 0 ? `-${Math.abs(dropoutChange)}` : `+${Math.abs(dropoutChange)}`}</div>
             </div>
             <div>
-              <div className="rep-premium-kpi-label">Average Attendance</div>
-              <h3 className="rep-premium-kpi-value">94.2%</h3>
+              <div className="rep-premium-kpi-label">Dropout Students</div>
+              <h3 className="rep-premium-kpi-value">{currentDropouts}</h3>
             </div>
           </div>
           <div className="rep-premium-kpi-card">
@@ -1068,21 +1091,21 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <div className="rep-checkbox checked"><Check size={12}/></div>
                   <div className="rep-todo-text">
                     <p>Review Teacher Attendance Records</p>
-                    <span>March 11, 2035</span>
+                    <span>May 11, 2026</span>
                   </div>
                 </div>
                 <div className="rep-todo-item">
                   <div className="rep-checkbox"></div>
                   <div className="rep-todo-text">
                     <p>Prepare Science Fair Guidelines</p>
-                    <span>March 13, 2035</span>
+                    <span>May 13, 2026</span>
                   </div>
                 </div>
                 <div className="rep-todo-item">
                   <div className="rep-checkbox"></div>
                   <div className="rep-todo-text">
                     <p>Update Library Book Inventory</p>
-                    <span>March 14, 2035</span>
+                    <span>May 14, 2026</span>
                   </div>
                 </div>
               </div>
@@ -1098,7 +1121,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           {/* Calendar Widget */}
           <div className="rep-card">
             <div className="rep-calendar-header">
-              <h3>March 2035</h3>
+              <h3>May 2026</h3>
               <div className="rep-cal-nav">
                 <button><ChevronLeft size={16}/></button>
                 <button><ChevronRight size={16}/></button>
@@ -1106,11 +1129,12 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
             <div className="rep-calendar-grid">
               <div className="day-name">S</div><div className="day-name">M</div><div className="day-name">T</div><div className="day-name">W</div><div className="day-name">T</div><div className="day-name">F</div><div className="day-name">S</div>
-              <div className="day prev-month">25</div><div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day">1</div><div className="day active-pink">2</div><div className="day">3</div>
-              <div className="day">4</div><div className="day active-cyan">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div><div className="day">10</div>
-              <div className="day">11</div><div className="day">12</div><div className="day">13</div><div className="day">14</div><div className="day">15</div><div className="day">16</div><div className="day">17</div>
-              <div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day">22</div><div className="day">23</div><div className="day">24</div>
-              <div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day active-pink">28</div><div className="day">29</div><div className="day">30</div><div className="day">31</div>
+              <div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day prev-month">29</div><div className="day prev-month">30</div><div className="day active-pink">1</div><div className="day">2</div>
+              <div className="day">3</div><div className="day active-cyan">4</div><div className="day">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div>
+              <div className="day">10</div><div className="day">11</div><div className="day">12</div><div className="day">13</div><div className="day">14</div><div className="day">15</div><div className="day">16</div>
+              <div className="day">17</div><div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day active-cyan">22</div><div className="day">23</div>
+              <div className="day">24</div><div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day active-pink">28</div><div className="day">29</div><div className="day">30</div>
+              <div className="day">31</div><div className="day next-month">1</div><div className="day next-month">2</div><div className="day next-month">3</div><div className="day next-month">4</div><div className="day next-month">5</div><div className="day next-month">6</div>
             </div>
           </div>
 
@@ -1123,7 +1147,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             <div className="rep-events-list">
               <div className="rep-event-item">
                 <div className="rep-event-time">
-                  <span className="tag pink-light">March 2</span>
+                  <span className="tag pink-light">May 2</span>
                   <span className="time-text">09:00 AM - 12:00 PM</span>
                 </div>
                 <h4>Annual Sport Competition</h4>
@@ -1131,7 +1155,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
               <div className="rep-event-item">
                 <div className="rep-event-time">
-                  <span className="tag cyan-light">March 5</span>
+                  <span className="tag cyan-light">May 5</span>
                   <span className="time-text">02:00 PM - 04:00 PM</span>
                 </div>
                 <h4>Parent-Teacher Meeting</h4>
@@ -1139,7 +1163,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
               <div className="rep-event-item">
                 <div className="rep-event-time">
-                  <span className="tag pink-light">March 28</span>
+                  <span className="tag pink-light">May 28</span>
                   <span className="time-text">09:00 AM - 05:00 PM</span>
                 </div>
                 <h4>Annual Science Fair</h4>
@@ -1159,28 +1183,28 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <div className="rep-activity-icon blue"><Users size={14}/></div>
                 <div className="rep-activity-content">
                   <p>New student Alicia Gomez (Class 2B) enrolled by Registrar.</p>
-                  <span>March 7, 2035 - 09:15 AM</span>
+                  <span>May 7, 2026 - 09:15 AM</span>
                 </div>
               </div>
               <div className="rep-activity-item">
                 <div className="rep-activity-icon pink"><Check size={14}/></div>
                 <div className="rep-activity-content">
                   <p>Attendance for Class 1A marked by Teacher John Smith.</p>
-                  <span>March 7, 2035 - 11:30 AM</span>
+                  <span>May 7, 2026 - 11:30 AM</span>
                 </div>
               </div>
               <div className="rep-activity-item">
                 <div className="rep-activity-icon blue"><DollarSign size={14}/></div>
                 <div className="rep-activity-content">
                   <p>Monthly fee payments verified for Grade 6 students.</p>
-                  <span>March 8, 2035 - 02:45 PM</span>
+                  <span>May 8, 2026 - 02:45 PM</span>
                 </div>
               </div>
               <div className="rep-activity-item">
                 <div className="rep-activity-icon pink"><Calendar size={14}/></div>
                 <div className="rep-activity-content">
                   <p>Exam timetable for Term 2 updated by Academic Coordinator.</p>
-                  <span>March 9, 2035 - 10:20 AM</span>
+                  <span>May 9, 2026 - 10:20 AM</span>
                 </div>
               </div>
             </div>
@@ -1325,7 +1349,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           <div className="rep-sd-col">
             <div className="rep-card">
               <div className="rep-calendar-header">
-                <h3>March 2035</h3>
+                <h3>May 2026</h3>
                 <div className="rep-cal-nav">
                   <button><ChevronLeft size={16}/></button>
                   <button><ChevronRight size={16}/></button>
@@ -1333,11 +1357,12 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
               <div className="rep-calendar-grid">
                 <div className="day-name">S</div><div className="day-name">M</div><div className="day-name">T</div><div className="day-name">W</div><div className="day-name">T</div><div className="day-name">F</div><div className="day-name">S</div>
-                <div className="day prev-month">25</div><div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day">1</div><div className="day active-blue">2</div><div className="day">3</div>
-                <div className="day">4</div><div className="day">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div><div className="day">10</div>
-                <div className="day">11</div><div className="day">12</div><div className="day">13</div><div className="day active-blue">14</div><div className="day active-blue">15</div><div className="day">16</div><div className="day">17</div>
-                <div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day">22</div><div className="day">23</div><div className="day">24</div>
-                <div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day active-pink">28</div><div className="day">29</div><div className="day">30</div><div className="day">31</div>
+                <div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day prev-month">29</div><div className="day prev-month">30</div><div className="day active-blue">1</div><div className="day">2</div>
+                <div className="day">3</div><div className="day">4</div><div className="day">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div>
+                <div className="day">10</div><div className="day">11</div><div className="day">12</div><div className="day active-blue">13</div><div className="day active-blue">14</div><div className="day">15</div><div className="day">16</div>
+                <div className="day">17</div><div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day active-cyan">22</div><div className="day">23</div>
+                <div className="day">24</div><div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day active-pink">28</div><div className="day">29</div><div className="day">30</div>
+                <div className="day">31</div><div className="day next-month">1</div><div className="day next-month">2</div><div className="day next-month">3</div><div className="day next-month">4</div><div className="day next-month">5</div><div className="day next-month">6</div>
               </div>
               <div className="rep-attendance-summary">
                 <div className="att-box cyan-bg"><span>Present</span><p>14</p></div>
@@ -1378,7 +1403,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               <div className="rep-health-list">
                 <div className="rep-health-item">
                   <span className="tag cyan-light">Medical Record</span>
-                  <p>Routine health check completed Feb 2035 - Fit for activities</p>
+                  <p>Routine health check completed Feb 2026 - Fit for activities</p>
                 </div>
                 <div className="rep-health-item">
                   <span className="tag pink-light">Allergy</span>
@@ -1492,7 +1517,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Jan 10, 2035</td>
+                    <td>Jan 10, 2026</td>
                     <td>
                       <div className="log-type">
                         <p>Positive Note</p>
@@ -1503,7 +1528,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <td><span className="status-badge gray">Record Recognition <ChevronDown size={12}/></span></td>
                   </tr>
                   <tr>
-                    <td>Feb 02, 2035</td>
+                    <td>Feb 02, 2026</td>
                     <td>
                       <div className="log-type">
                         <p>Positive Note</p>
@@ -1514,7 +1539,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <td><span className="status-badge gray">Recognition Recorded</span></td>
                   </tr>
                   <tr>
-                    <td>Feb 18, 2035</td>
+                    <td>Feb 18, 2026</td>
                     <td>
                       <div className="log-type">
                         <p>Minor Issue</p>
@@ -1525,7 +1550,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <td><span className="status-badge gray">Issue Warning <ChevronDown size={12}/></span></td>
                   </tr>
                   <tr>
-                    <td>Mar 05, 2035</td>
+                    <td>May 05, 2026</td>
                     <td>
                       <div className="log-type">
                         <p>Minor Issue</p>
@@ -2519,19 +2544,19 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <tbody>
                     <tr>
                       <td style={{minWidth: '120px'}}>Digital Learning Tools Training<br/><span style={{fontSize: 10, color: 'var(--text-gray)', whiteSpace: 'nowrap'}}>Training</span></td>
-                      <td style={{whiteSpace: 'nowrap'}}><span className="text-cyan font-semibold">Apr 2, 2035</span></td>
+                      <td style={{whiteSpace: 'nowrap'}}><span className="text-cyan font-semibold">Apr 2, 2026</span></td>
                       <td style={{minWidth: '120px'}}>Zoom - International Education Network</td>
                       <td style={{whiteSpace: 'nowrap'}}><span className="status-badge gray">Upcoming</span></td>
                     </tr>
                     <tr>
                       <td style={{minWidth: '120px'}}>Classroom Management Certification<br/><span style={{fontSize: 10, color: 'var(--text-gray)', whiteSpace: 'nowrap'}}>Certification</span></td>
-                      <td style={{whiteSpace: 'nowrap'}}><span className="text-cyan font-semibold">Feb 8, 2035</span></td>
+                      <td style={{whiteSpace: 'nowrap'}}><span className="text-cyan font-semibold">Feb 8, 2026</span></td>
                       <td style={{minWidth: '120px'}}>Cambridge University Online (UK)</td>
                       <td style={{whiteSpace: 'nowrap'}}><span className="status-badge blue">Completed</span></td>
                     </tr>
                     <tr>
                       <td style={{minWidth: '120px'}}>Advanced English Teaching Methods<br/><span style={{fontSize: 10, color: 'var(--text-gray)', whiteSpace: 'nowrap'}}>Workshop</span></td>
-                      <td style={{whiteSpace: 'nowrap'}}><span className="text-cyan font-semibold">Jan 12, 2035</span></td>
+                      <td style={{whiteSpace: 'nowrap'}}><span className="text-cyan font-semibold">Jan 12, 2026</span></td>
                       <td style={{minWidth: '120px'}}>London, UK - British Council</td>
                       <td style={{whiteSpace: 'nowrap'}}><span className="status-badge blue">Completed</span></td>
                     </tr>
@@ -2545,7 +2570,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           <div className="rep-sd-col">
             <div className="rep-card">
               <div className="rep-calendar-header">
-                <h3>March 2035</h3>
+                <h3>May 2026</h3>
                 <div className="rep-cal-nav">
                   <button><ChevronLeft size={16}/></button>
                   <button><ChevronRight size={16}/></button>
@@ -2553,11 +2578,12 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
               <div className="rep-calendar-grid">
                 <div className="day-name">S</div><div className="day-name">M</div><div className="day-name">T</div><div className="day-name">W</div><div className="day-name">T</div><div className="day-name">F</div><div className="day-name">S</div>
-                <div className="day prev-month">25</div><div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day">1</div><div className="day">2</div><div className="day">3</div>
-                <div className="day">4</div><div className="day active-pink">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div><div className="day">10</div>
-                <div className="day">11</div><div className="day">12</div><div className="day">13</div><div className="day active-blue">14</div><div className="day">15</div><div className="day">16</div><div className="day">17</div>
-                <div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day">22</div><div className="day">23</div><div className="day">24</div>
-                <div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day">28</div><div className="day">29</div><div className="day">30</div><div className="day">31</div>
+                <div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day prev-month">29</div><div className="day prev-month">30</div><div className="day">1</div><div className="day">2</div>
+                <div className="day">3</div><div className="day active-pink">4</div><div className="day">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div>
+                <div className="day">10</div><div className="day">11</div><div className="day">12</div><div className="day active-blue">13</div><div className="day">14</div><div className="day">15</div><div className="day">16</div>
+                <div className="day">17</div><div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day active-cyan">22</div><div className="day">23</div>
+                <div className="day">24</div><div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day">28</div><div className="day">29</div><div className="day">30</div>
+                <div className="day">31</div><div className="day next-month">1</div><div className="day next-month">2</div><div className="day next-month">3</div><div className="day next-month">4</div><div className="day next-month">5</div><div className="day next-month">6</div>
               </div>
               <div className="rep-attendance-summary" style={{justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', margin: '16px -24px 0', padding: '16px 24px 0'}}>
                 <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}><span>Present</span><p>11</p></div>
@@ -4153,6 +4179,37 @@ const AdminDashboard = ({ user, onLogout }) => {
         </div>
       )}
 
+      {/* ─── CLASSROOM SIZE MODAL ─── */}
+      {showClassroomSizeModal && (
+        <div className="rep-classroom-size-overlay" onClick={() => setShowClassroomSizeModal(false)}>
+          <div className="rep-classroom-size-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="rep-classroom-size-header">
+              <div className="rep-classroom-size-title-group">
+                <div className="rep-classroom-size-title-icon">
+                  <LayoutDashboard size={20} />
+                </div>
+                <div>
+                  <h2>Classroom Size</h2>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94A3B8' }}>Layout configurations and specifications by grade levels.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowClassroomSizeModal(false)} className="rep-classroom-size-close-btn">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="rep-classroom-size-body">
+              <div className="rep-classroom-size-img-wrapper">
+                <img 
+                  src="/classroom_size.jpg" 
+                  alt="Classroom Size Layouts" 
+                  className="rep-classroom-size-img" 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── YEAR COMPARISON MODAL ─── */}
       {showCompareYearModal && (
         <div className="rep-compare-modal-overlay" onClick={() => setShowCompareYearModal(false)}>
@@ -4177,25 +4234,25 @@ const AdminDashboard = ({ user, onLogout }) => {
             {/* Modal Content */}
             <div className="rep-compare-modal-content">
               
-              {/* Year Select Pills */}
+              {/* Year Select Pills - Multi-select */}
               <div className="rep-compare-pills-container">
-                <span className="rep-compare-pills-label">Select years:</span>
+                <span className="rep-compare-pills-label">Select years to compare:</span>
                 <div className="rep-compare-pills">
-                  {data?.schoolYears && Object.keys(data.schoolYears).sort().reverse().map(sy => {
+                  {data?.schoolYears && Object.keys(data.schoolYears).sort().reverse().map((sy, idx) => {
                     const shortName = getShortYear(sy);
-                    const isPrimary = compareYearPrimary === sy;
-                    const isSecondary = compareYearSecondary === sy;
+                    const isSelected = compareSelectedYears.includes(sy);
+                    const colorIdx = compareSelectedYears.indexOf(sy);
                     
                     return (
                       <button 
                         key={sy}
-                        className={`rep-compare-pill ${isPrimary ? 'primary' : ''} ${isSecondary ? 'secondary' : ''}`}
-                        onClick={() => {
-                          if (isPrimary) return;
-                          setCompareYearSecondary(compareYearPrimary);
-                          setCompareYearPrimary(sy);
-                          setCompareYearMonthlyTab(sy);
-                        }}
+                        className={`rep-compare-pill ${isSelected ? 'selected' : ''}`}
+                        style={isSelected ? { 
+                          backgroundColor: COMPARE_YEAR_COLORS[colorIdx % COMPARE_YEAR_COLORS.length], 
+                          borderColor: COMPARE_YEAR_COLORS[colorIdx % COMPARE_YEAR_COLORS.length],
+                          color: '#fff' 
+                        } : {}}
+                        onClick={() => toggleCompareYear(sy)}
                       >
                         {shortName}
                       </button>
@@ -4204,68 +4261,38 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Top Row: Side-by-Side KPIs & Bar Chart */}
-              <div className="rep-compare-top-layout">
+              {/* Top Row: KPI cards for each selected year + Chart */}
+              <div className="rep-compare-top-layout" style={{ gridTemplateColumns: `repeat(${Math.min(compareSelectedYears.length, 3)}, 1fr) 2fr` }}>
                 
-                {/* Primary Year KPIs */}
-                <div className="rep-compare-kpi-card primary">
-                  <div className="rep-compare-kpi-card-header">
-                    <span className="rep-compare-kpi-card-title">{getShortYear(compareYearPrimary)} Metrics</span>
-                    <span className="rep-compare-badge primary">Primary</span>
-                  </div>
-                  <div className="rep-compare-kpi-list">
-                    <div className="rep-compare-kpi-item">
-                      <span className="rep-compare-kpi-item-label">Enrollment</span>
-                      <span className="rep-compare-kpi-item-value">{data?.schoolYears?.[compareYearPrimary]?.totalStudents || 0}</span>
-                    </div>
-                    <div className="rep-compare-kpi-item">
-                      <span className="rep-compare-kpi-item-label">Active Teachers</span>
-                      <span className="rep-compare-kpi-item-value">{data?.schoolYears?.[compareYearPrimary]?.totalTeachers || 0}</span>
-                    </div>
-                    <div className="rep-compare-kpi-item">
-                      <span className="rep-compare-kpi-item-label">Retention Rate</span>
-                      <span className="rep-compare-kpi-item-value">
-                        {(() => {
-                          const syData = data?.schoolYears?.[compareYearPrimary] || {};
-                          const students = syData.totalStudents || 1;
-                          const dropouts = syData.totalDropouts || 0;
-                          return ((students - dropouts) / students * 100).toFixed(1) + '%';
-                        })()}
+                {/* Dynamic KPI cards for each selected year */}
+                {compareSelectedYears.slice(0, 3).map((sy, idx) => (
+                  <div key={sy} className="rep-compare-kpi-card" style={{ borderTop: `3px solid ${COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length]}` }}>
+                    <div className="rep-compare-kpi-card-header">
+                      <span className="rep-compare-kpi-card-title">{getShortYear(sy)} Metrics</span>
+                      <span className="rep-compare-badge" style={{ backgroundColor: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length] + '22', color: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length] }}>
+                        {idx === 0 ? 'Primary' : `Compare ${idx}`}
                       </span>
                     </div>
+                    <div className="rep-compare-kpi-list">
+                      <div className="rep-compare-kpi-item">
+                        <span className="rep-compare-kpi-item-label">Enrollment</span>
+                        <span className="rep-compare-kpi-item-value">{data?.schoolYears?.[sy]?.totalStudents || 0}</span>
+                      </div>
+                      <div className="rep-compare-kpi-item">
+                        <span className="rep-compare-kpi-item-label">Active Teachers</span>
+                        <span className="rep-compare-kpi-item-value">{data?.schoolYears?.[sy]?.totalTeachers || 0}</span>
+                      </div>
+                      <div className="rep-compare-kpi-item">
+                        <span className="rep-compare-kpi-item-label">Dropout of Student</span>
+                        <span className="rep-compare-kpi-item-value">
+                          {data?.schoolYears?.[sy]?.totalDropouts || 0}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
 
-                {/* Secondary Year KPIs */}
-                <div className="rep-compare-kpi-card">
-                  <div className="rep-compare-kpi-card-header">
-                    <span className="rep-compare-kpi-card-title">{getShortYear(compareYearSecondary)} Metrics</span>
-                    <span className="rep-compare-badge secondary">Compare</span>
-                  </div>
-                  <div className="rep-compare-kpi-list">
-                    <div className="rep-compare-kpi-item">
-                      <span className="rep-compare-kpi-item-label">Enrollment</span>
-                      <span className="rep-compare-kpi-item-value">{data?.schoolYears?.[compareYearSecondary]?.totalStudents || 0}</span>
-                    </div>
-                    <div className="rep-compare-kpi-item">
-                      <span className="rep-compare-kpi-item-label">Active Teachers</span>
-                      <span className="rep-compare-kpi-item-value">{data?.schoolYears?.[compareYearSecondary]?.totalTeachers || 0}</span>
-                    </div>
-                    <div className="rep-compare-kpi-item">
-                      <span className="rep-compare-kpi-item-label">Retention Rate</span>
-                      <span className="rep-compare-kpi-item-value">
-                        {(() => {
-                          const syData = data?.schoolYears?.[compareYearSecondary] || {};
-                          const students = syData.totalStudents || 1;
-                          const dropouts = syData.totalDropouts || 0;
-                          return ((students - dropouts) / students * 100).toFixed(1) + '%';
-                        })()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recharts Performance Comparison Chart */}
+                {/* Recharts Performance Comparison Chart - multi-year bars */}
                 <div className="rep-compare-chart-card">
                   <div className="rep-compare-chart-card-header">
                     <div>
@@ -4274,26 +4301,25 @@ const AdminDashboard = ({ user, onLogout }) => {
                       </div>
                       <div className="rep-compare-chart-subtitle">Grade-level enrollment distributions</div>
                     </div>
-                    <div className="rep-compare-chart-legend">
-                      <div className="rep-compare-chart-legend-item">
-                        <div className="rep-compare-chart-legend-color" style={{ backgroundColor: '#3B82F6' }}></div>
-                        {getShortYear(compareYearPrimary)}
-                      </div>
-                      <div className="rep-compare-chart-legend-item">
-                        <div className="rep-compare-chart-legend-color" style={{ backgroundColor: '#8B5CF6' }}></div>
-                        {getShortYear(compareYearSecondary)}
-                      </div>
+                    <div className="rep-compare-chart-legend" style={{ flexWrap: 'wrap' }}>
+                      {compareSelectedYears.map((sy, idx) => (
+                        <div key={sy} className="rep-compare-chart-legend-item">
+                          <div className="rep-compare-chart-legend-color" style={{ backgroundColor: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length] }}></div>
+                          {getShortYear(sy)}
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div style={{ flex: 1, minHeight: '260px' }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={getGradeComparisonChartData(compareYearPrimary, compareYearSecondary)} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} barGap={6}>
+                      <BarChart data={getGradeComparisonChartData(compareSelectedYears)} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} barGap={4}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 10}} />
                         <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 10}} />
                         <Tooltip contentStyle={{backgroundColor: '#0F172A', borderColor: 'rgba(255,255,255,0.1)', color: '#fff'}} />
-                        <Bar dataKey={compareYearPrimary} fill="#3B82F6" radius={[3, 3, 0, 0]} isAnimationActive={true} animationDuration={800} />
-                        <Bar dataKey={compareYearSecondary} fill="#8B5CF6" radius={[3, 3, 0, 0]} isAnimationActive={true} animationDuration={800} />
+                        {compareSelectedYears.map((sy, idx) => (
+                          <Bar key={sy} dataKey={sy} fill={COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length]} radius={[3, 3, 0, 0]} isAnimationActive={true} animationDuration={800} />
+                        ))}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -4301,77 +4327,54 @@ const AdminDashboard = ({ user, onLogout }) => {
 
               </div>
 
-              {/* Dynamic Context Drivers Row */}
-              <div className="rep-compare-context-row">
+              {/* Dynamic Context Drivers Row - scrollable for many years */}
+              <div className="rep-compare-context-row" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
                 
-                {/* Primary Context */}
-                <div className="rep-compare-context-card primary">
-                  <h4 className="rep-compare-context-card-title" style={{ color: '#F97316' }}>
-                    <GraduationCap size={16} /> {getShortYear(compareYearPrimary)} Context
-                  </h4>
-                  <div className="rep-compare-context-list">
-                    <div className="rep-compare-context-item">
-                      <h5>Enrollment Drivers</h5>
-                      <p>{getYearlyContext(compareYearPrimary).drivers}</p>
-                    </div>
-                    <div className="rep-compare-context-item">
-                      <h5>Staffing & Operations</h5>
-                      <p>{getYearlyContext(compareYearPrimary).operations}</p>
-                    </div>
-                    <div className="rep-compare-context-item">
-                      <h5>Efficiency & Retention</h5>
-                      <p>{getYearlyContext(compareYearPrimary).efficiency}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Secondary Context */}
-                <div className="rep-compare-context-card secondary">
-                  <h4 className="rep-compare-context-card-title" style={{ color: '#CBD5E1' }}>
-                    <GraduationCap size={16} /> {getShortYear(compareYearSecondary)} Context
-                  </h4>
-                  <div className="rep-compare-context-list">
-                    <div className="rep-compare-context-item">
-                      <h5>Enrollment Drivers</h5>
-                      <p>{getYearlyContext(compareYearSecondary).drivers}</p>
-                    </div>
-                    <div className="rep-compare-context-item">
-                      <h5>Staffing & Operations</h5>
-                      <p>{getYearlyContext(compareYearSecondary).operations}</p>
-                    </div>
-                    <div className="rep-compare-context-item">
-                      <h5>Efficiency & Retention</h5>
-                      <p>{getYearlyContext(compareYearSecondary).efficiency}</p>
+                {/* Context card for each selected year */}
+                {compareSelectedYears.map((sy, idx) => (
+                  <div key={sy} className="rep-compare-context-card" style={{ minWidth: '280px', flex: '1 0 280px', borderTop: `2px solid ${COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length]}` }}>
+                    <h4 className="rep-compare-context-card-title" style={{ color: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length] }}>
+                      <GraduationCap size={16} /> {getShortYear(sy)} Context
+                    </h4>
+                    <div className="rep-compare-context-list">
+                      <div className="rep-compare-context-item">
+                        <h5>Enrollment Drivers</h5>
+                        <p>{getYearlyContext(sy).drivers}</p>
+                      </div>
+                      <div className="rep-compare-context-item">
+                        <h5>Staffing & Operations</h5>
+                        <p>{getYearlyContext(sy).operations}</p>
+                      </div>
+                      <div className="rep-compare-context-item">
+                        <h5>Efficiency & Retention</h5>
+                        <p>{getYearlyContext(sy).efficiency}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))}
 
                 {/* Multi-Year Summary */}
-                <div className="rep-compare-context-card summary">
+                <div className="rep-compare-context-card summary" style={{ minWidth: '280px', flex: '1 0 280px' }}>
                   <h4 className="rep-compare-context-card-title" style={{ color: '#EA580C' }}>
                     <TrendingUp size={16} /> Multi-Year Summary
                   </h4>
                   <p style={{ fontSize: '13px', color: '#E2E8F0', lineHeight: 1.6, margin: 0 }}>
-                    {getMultiYearSummaryText(compareYearPrimary, compareYearSecondary)}
+                    {getMultiYearSummaryText(compareSelectedYears)}
                   </p>
                 </div>
 
               </div>
 
-              {/* Executive Summary Row */}
-              <div className="rep-compare-exec-row">
-                <div className="rep-compare-exec-card primary">
-                  <h4 className="rep-compare-exec-card-title" style={{ color: '#3B82F6' }}>
-                    <ClipboardList size={14} /> Executive Summary ({getShortYear(compareYearPrimary)})
-                  </h4>
-                  <p>{getYearExecutiveSummary(compareYearPrimary)}</p>
-                </div>
-                <div className="rep-compare-exec-card secondary">
-                  <h4 className="rep-compare-exec-card-title" style={{ color: '#8B5CF6' }}>
-                    <ClipboardList size={14} /> Executive Summary ({getShortYear(compareYearSecondary)})
-                  </h4>
-                  <p>{getYearExecutiveSummary(compareYearSecondary)}</p>
-                </div>
+              {/* Executive Summary Row - all selected years */}
+              <div className="rep-compare-exec-row" style={{ display: 'grid', gridTemplateColumns: `repeat(${compareSelectedYears.length}, 1fr)`, gap: '12px' }}>
+                {compareSelectedYears.map((sy, idx) => (
+                  <div key={sy} className="rep-compare-exec-card" style={{ borderLeft: `3px solid ${COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length]}` }}>
+                    <h4 className="rep-compare-exec-card-title" style={{ color: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length] }}>
+                      <ClipboardList size={14} /> Executive Summary ({getShortYear(sy)})
+                    </h4>
+                    <p>{getYearExecutiveSummary(sy)}</p>
+                  </div>
+                ))}
               </div>
 
               {/* Monthly Performance Breakdown Section */}
@@ -4381,19 +4384,17 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <h3>Monthly Performance Breakdown</h3>
                     <p>Track monthly trends, highlights, and operational warnings</p>
                   </div>
-                  <div className="rep-compare-monthly-tabs">
-                    <button 
-                      className={`rep-compare-monthly-tab ${compareYearMonthlyTab === compareYearPrimary ? 'active' : ''}`}
-                      onClick={() => setCompareYearMonthlyTab(compareYearPrimary)}
-                    >
-                      {getShortYear(compareYearPrimary)}
-                    </button>
-                    <button 
-                      className={`rep-compare-monthly-tab ${compareYearMonthlyTab === compareYearSecondary ? 'active' : ''}`}
-                      onClick={() => setCompareYearMonthlyTab(compareYearSecondary)}
-                    >
-                      {getShortYear(compareYearSecondary)}
-                    </button>
+                  <div className="rep-compare-monthly-tabs" style={{ flexWrap: 'wrap' }}>
+                    {compareSelectedYears.map((sy, idx) => (
+                      <button 
+                        key={sy}
+                        className={`rep-compare-monthly-tab ${compareYearMonthlyTab === sy ? 'active' : ''}`}
+                        onClick={() => setCompareYearMonthlyTab(sy)}
+                        style={compareYearMonthlyTab === sy ? { borderColor: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length], color: COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length] } : {}}
+                      >
+                        {getShortYear(sy)}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

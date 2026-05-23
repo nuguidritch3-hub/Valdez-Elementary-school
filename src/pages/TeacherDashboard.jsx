@@ -20,8 +20,8 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
   // Prepared Exams State
   const [examsList, setExamsList] = useState([
-    { id: 1, title: 'Q1 Midterm Exam', date: 'March 15, 2026', type: 'Multiple Choice' },
-    { id: 2, title: 'Reading Comprehension', date: 'March 22, 2026', type: 'Essay' },
+    { id: 1, title: 'Q1 Midterm Exam', date: 'May 15, 2026', type: 'Multiple Choice' },
+    { id: 2, title: 'Reading Comprehension', date: 'May 22, 2026', type: 'Essay' },
     { id: 3, title: 'Math Quiz 4', date: 'April 02, 2026', type: 'Problem Solving' },
     { id: 4, title: 'Science Finals', date: 'April 10, 2026', type: 'Mixed' }
   ]);
