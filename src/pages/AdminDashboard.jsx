@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, PieChart, Pie, Cell, ComposedChart, LineChart, Line, Legend, LabelList
@@ -9,7 +9,7 @@ import {
   ClipboardList, LogOut, Search, Settings, Bell, ChevronDown, MoreHorizontal,
   Award, Briefcase, ChevronLeft, ChevronRight, Check, UserCheck, X, UserPlus,
   Moon, Sun, BarChart2, TrendingUp, TrendingDown, AlertCircle, Lightbulb, Clock, Trash2, Edit,
-  Menu, UserX
+  Menu, UserX, Download, Upload, Shield, Key
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { getApiUrl } from '../config';
@@ -51,6 +51,50 @@ const attendanceData = [
   { name: 'Fri', present: 1089 },
 ];
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-chart-tooltip">
+        <p className="tooltip-label">{label}</p>
+        <div className="tooltip-items">
+          {payload.map((item, index) => {
+            const val = item.value;
+            let formattedVal = typeof val === 'number' ? val.toLocaleString() : val;
+            
+            if (typeof val === 'number') {
+              const nameLower = (item.name || '').toLowerCase();
+              const keyLower = (item.dataKey || '').toString().toLowerCase();
+              if (
+                nameLower.includes('rate') || 
+                nameLower.includes('ratio') || 
+                nameLower.includes('percent') ||
+                nameLower.includes('grade') ||
+                nameLower.includes('attendance') ||
+                keyLower.includes('grade') ||
+                keyLower.includes('avg') ||
+                keyLower.includes('val')
+              ) {
+                if (val <= 100) {
+                  formattedVal = `${val}%`;
+                }
+              }
+            }
+            
+            return (
+              <div key={index} className="tooltip-item">
+                <span className="tooltip-dot" style={{ backgroundColor: item.color || item.fill }} />
+                <span className="tooltip-name">{item.name || item.dataKey}:</span>
+                <span className="tooltip-value" style={{ color: item.color || item.fill }}>{formattedVal}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const AdminDashboard = ({ user, onLogout }) => {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
@@ -70,10 +114,29 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [studentStatusFilter, setStudentStatusFilter] = useState('All');
   const [deletedStudentIds, setDeletedStudentIds] = useState([]);
   const [deletedTeacherIds, setDeletedTeacherIds] = useState([]);
+  const [studentStatusOverrides, setStudentStatusOverrides] = useState({});
+  const [adminName, setAdminName] = useState(user?.name || 'SUZETTE D. PAGUIO');
+  const [adminEmail, setAdminEmail] = useState('suzette@valdez.edu');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => {
     setStudentCurrentPage(1);
   }, [selectedGrade, selectedSection, selectedYear, studentSearchQuery, studentStatusFilter]);
+
+  useEffect(() => {
+    const handleNav = (e) => {
+      if (e.detail && e.detail.tab) {
+        const targetTab = e.detail.tab;
+        const validTabs = ['Dashboard', 'Calendar', 'Teachers', 'Students', 'Analytics', 'Accounts'];
+        const matched = validTabs.find(t => t.toLowerCase() === targetTab.toLowerCase());
+        if (matched) {
+          setActiveTab(matched);
+        }
+      }
+    };
+    window.addEventListener('app-navigate', handleNav);
+    return () => window.removeEventListener('app-navigate', handleNav);
+  }, []);
   const [addStudentForm, setAddStudentForm] = useState({
     firstName: '',
     lastName: '',
@@ -136,11 +199,385 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [compareSelectedYears, setCompareSelectedYears] = useState([]);
   const [compareYearMonthlyTab, setCompareYearMonthlyTab] = useState('');
 
+  // Export/Import Modal State
+  const [showExportImportModal, setShowExportImportModal] = useState(false);
+  const [exportImportTab, setExportImportTab] = useState('export');
+  const [exportYearSelect, setExportYearSelect] = useState('All');
+  const [importFile, setImportFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+
+  // Edit Statistics States
+  const [showEditStatsModal, setShowEditStatsModal] = useState(false);
+  const [editStatsYear, setEditStatsYear] = useState('');
+  const [editStatsForm, setEditStatsForm] = useState([]);
+  const [editStatsTotalClassrooms, setEditStatsTotalClassrooms] = useState(15);
+  const [editStatsTotalSeats, setEditStatsTotalSeats] = useState(461);
+  const [editStatsLoading, setEditStatsLoading] = useState(false);
+
+  // Edit Student Details States
+  const [isEditingStudent, setIsEditingStudent] = useState(false);
+  const [editStudentForm, setEditStudentForm] = useState({});
+  const [editStudentLoading, setEditStudentLoading] = useState(false);
+
+  // Edit Teacher Details States
+  const [isEditingTeacher, setIsEditingTeacher] = useState(false);
+  const [editTeacherForm, setEditTeacherForm] = useState({});
+  const [editTeacherLoading, setEditTeacherLoading] = useState(false);
+
+  // Accounts Tab States
+  const [accountSearch, setAccountSearch] = useState('');
+  const [accountRoleFilter, setAccountRoleFilter] = useState('All');
+  const [accountPage, setAccountPage] = useState(1);
+
+  const [editingAccountId, setEditingAccountId] = useState(null);
+  const [editAccountForm, setEditAccountForm] = useState({ username: '', password: '' });
+  const [editAccountLoading, setEditAccountLoading] = useState(false);
+
+  const [lastCreatedStudent, setLastCreatedStudent] = useState(null);
+
+  // ─── Dashboard Widget States ───
+  // To-Do List
+  const [todoItems, setTodoItems] = useState([
+    { id: 1, text: 'Review Teacher Attendance Records', date: 'May 11, 2026', completed: true },
+    { id: 2, text: 'Prepare Science Fair Guidelines', date: 'May 13, 2026', completed: false },
+    { id: 3, text: 'Update Library Book Inventory', date: 'May 14, 2026', completed: false },
+  ]);
+  const [newTodoText, setNewTodoText] = useState('');
+  const [showTodoInput, setShowTodoInput] = useState(false);
+
+  const toggleTodo = (id) => {
+    setTodoItems(prev => prev.map(item =>
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ));
+  };
+
+  const addTodo = () => {
+    if (!newTodoText.trim()) return;
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    setTodoItems(prev => [...prev, {
+      id: Date.now(),
+      text: newTodoText.trim(),
+      date: dateStr,
+      completed: false,
+    }]);
+    setNewTodoText('');
+    setShowTodoInput(false);
+  };
+
+  const removeTodo = (id) => {
+    setTodoItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  // Dashboard Mini Calendar Navigation
+  const [dashCalMonth, setDashCalMonth] = useState(new Date().getMonth()); // 0-11
+  const [dashCalYear, setDashCalYear] = useState(new Date().getFullYear());
+
+  const dashCalPrev = () => {
+    setDashCalMonth(prev => {
+      if (prev === 0) { setDashCalYear(y => y - 1); return 11; }
+      return prev - 1;
+    });
+  };
+  const dashCalNext = () => {
+    setDashCalMonth(prev => {
+      if (prev === 11) { setDashCalYear(y => y + 1); return 0; }
+      return prev + 1;
+    });
+  };
+
+  const getDashCalDays = () => {
+    const firstDay = new Date(dashCalYear, dashCalMonth, 1).getDay();
+    const daysInMonth = new Date(dashCalYear, dashCalMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(dashCalYear, dashCalMonth, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth = today.getMonth() === dashCalMonth && today.getFullYear() === dashCalYear;
+    const todayDate = today.getDate();
+
+    const days = [];
+    // Previous month padding
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: daysInPrevMonth - i, type: 'prev-month' });
+    }
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const hasEvent = customEvents.some(e => e.day === d);
+      const isToday = isCurrentMonth && d === todayDate;
+      days.push({ day: d, type: isToday ? 'active-cyan' : hasEvent ? 'active-pink' : '', isToday });
+    }
+    // Next month padding
+    const remaining = 42 - days.length;
+    for (let d = 1; d <= remaining; d++) {
+      days.push({ day: d, type: 'next-month' });
+    }
+    return days;
+  };
+
+  const calPrev = () => {
+    const idx = MONTH_NAMES.indexOf(calendarMonth);
+    if (idx === 0) {
+      setCalendarMonth('December');
+      setCalendarYear(y => String(parseInt(y, 10) - 1));
+    } else {
+      setCalendarMonth(MONTH_NAMES[idx - 1]);
+    }
+  };
+
+  const calNext = () => {
+    const idx = MONTH_NAMES.indexOf(calendarMonth);
+    if (idx === 11) {
+      setCalendarMonth('January');
+      setCalendarYear(y => String(parseInt(y, 10) + 1));
+    } else {
+      setCalendarMonth(MONTH_NAMES[idx + 1]);
+    }
+  };
+
+  const getCalendarDays = () => {
+    const monthIndex = MONTH_NAMES.indexOf(calendarMonth);
+    const year = parseInt(calendarYear, 10) || 2026;
+    const firstDay = new Date(year, monthIndex, 1).getDay();
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, monthIndex, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
+    const todayDate = today.getDate();
+
+    const days = [];
+    // Previous month padding
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: daysInPrevMonth - i, type: 'prev-month' });
+    }
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const hasEvent = customEvents.some(e => e.day === d);
+      const isToday = isCurrentMonth && d === todayDate;
+      days.push({ day: d, type: isToday ? 'active-cyan' : hasEvent ? 'active-pink' : '', isToday, isCurrentMonth: true });
+    }
+    // Next month padding
+    const remaining = 42 - days.length;
+    for (let d = 1; d <= remaining; d++) {
+      days.push({ day: d, type: 'next-month' });
+    }
+    return days;
+  };
+
+  const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Gender chart filter
+  const [genderGradeFilter, setGenderGradeFilter] = useState('All Grades');
+
+  // Activity Log (dynamic)
+  const [activityLog, setActivityLog] = useState([
+    { id: 1, icon: 'users', color: 'blue', text: 'System initialized — Admin dashboard loaded.', time: new Date().toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) },
+  ]);
+
+  const addActivity = (icon, color, text) => {
+    const time = new Date().toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+    setActivityLog(prev => [{ id: Date.now(), icon, color, text, time }, ...prev].slice(0, 20));
+  };
+
+  const handleEditSchoolYearStats = (year) => {
+    const syData = data?.schoolYears?.[year] || {};
+    const classroomsList = syData.classrooms || [];
+    
+    const order = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+    const sorted = [...classroomsList].sort((a, b) => {
+      return order.indexOf(a.gradeLevel) - order.indexOf(b.gradeLevel);
+    });
+
+    setEditStatsYear(year);
+    setEditStatsForm(sorted.map(c => ({
+      gradeLevel: c.gradeLevel,
+      enrollment: c.enrollment || 0,
+      repeaters: c.repeaters || 0,
+      dropouts: c.dropouts || 0,
+      classrooms: c.classrooms || '',
+      seats: c.seats || '',
+      teachers: c.teachers || 0,
+      section: c.section
+    })));
+    setEditStatsTotalClassrooms(syData.totalClassrooms || 15);
+    setEditStatsTotalSeats(syData.totalSeats || 461);
+    setShowEditStatsModal(true);
+  };
+
+  const handleSaveSchoolYearStats = async (e) => {
+    e.preventDefault();
+    setEditStatsLoading(true);
+    try {
+      const response = await fetch(getApiUrl('/api/admin/school-year/update'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          year: editStatsYear,
+          classrooms: editStatsForm,
+          totalClassrooms: Number(editStatsTotalClassrooms),
+          totalSeats: Number(editStatsTotalSeats)
+        })
+      });
+      
+      const result = await response.json();
+      if (response.ok) {
+        setCustomAlert({
+          show: true,
+          title: 'Success',
+          message: result.message || 'School year statistics updated successfully.',
+          type: 'success'
+        });
+        setShowEditStatsModal(false);
+        fetchAdminData();
+      } else {
+        setCustomAlert({
+          show: true,
+          title: 'Update Failed',
+          message: result.error || 'Failed to update statistics.',
+          type: 'error'
+        });
+      }
+    } catch (err) {
+      console.error('Update school year statistics failed:', err);
+      setCustomAlert({
+        show: true,
+        title: 'Error',
+        message: 'A network error occurred while updating the statistics.',
+        type: 'error'
+      });
+    } finally {
+      setEditStatsLoading(false);
+    }
+  };
+
+  const handleDeleteSchoolYearClick = (sy) => {
+    setCustomConfirm({
+      show: true,
+      title: 'Delete School Year',
+      message: `Are you sure you want to completely delete ${sy}? This will permanently remove all classrooms, teachers, seats, and census counts for this year from the system database.`,
+      onConfirm: () => executeDeleteSchoolYear(sy)
+    });
+  };
+
+  const executeDeleteSchoolYear = async (sy) => {
+    try {
+      const response = await fetch(getApiUrl(`/api/admin/school-year?year=${encodeURIComponent(sy)}`), {
+        method: 'DELETE'
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setCustomAlert({
+          show: true,
+          title: 'Success',
+          message: result.message || 'School year deleted successfully.',
+          type: 'success'
+        });
+        
+        if (selectedYear === sy) {
+          const remainingYears = globalYears.filter(y => y !== sy);
+          if (remainingYears.length > 0) {
+            setSelectedYear(remainingYears[0]);
+          }
+        }
+        
+        fetchAdminData();
+      } else {
+        setCustomAlert({
+          show: true,
+          title: 'Delete Failed',
+          message: result.error || 'Failed to delete school year.',
+          type: 'error'
+        });
+      }
+    } catch (err) {
+      console.error('Delete school year failed:', err);
+      setCustomAlert({
+        show: true,
+        title: 'Error',
+        message: 'A network error occurred while deleting the school year.',
+        type: 'error'
+      });
+    }
+  };
+
+  const handleExportReportYear = async () => {
+    try {
+      const url = exportYearSelect === 'All'
+        ? getApiUrl('/api/admin/export-report')
+        : getApiUrl(`/api/admin/export-report?year=${encodeURIComponent(exportYearSelect)}`);
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = exportYearSelect === 'All'
+        ? 'Valdez_ES_Report_2020-2027.xlsx'
+        : `Valdez_ES_Report_${exportYearSelect.replace('S.Y. ', '').replace('-', '_')}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Export failed:', err);
+      setCustomAlert({ show: true, title: 'Export Failed', message: 'Failed to export report. Please try again.', type: 'error' });
+    }
+  };
+
+  const handleImportYear = async (e) => {
+    e.preventDefault();
+    if (!importFile) {
+      setCustomAlert({ show: true, title: 'Error', message: 'Please select a file to import.', type: 'error' });
+      return;
+    }
+
+    setImportLoading(true);
+    const formData = new FormData();
+    formData.append('file', importFile);
+
+    try {
+      const response = await fetch(getApiUrl('/api/admin/import-year'), {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setCustomAlert({
+          show: true,
+          title: 'Import Success',
+          message: result.message || 'School year data imported successfully.',
+          type: 'success'
+        });
+        setImportFile(null);
+        setShowExportImportModal(false);
+        fetchAdminData();
+      } else {
+        throw new Error(result.error || 'Failed to import school year data.');
+      }
+    } catch (err) {
+      console.error('Import failed:', err);
+      setCustomAlert({ show: true, title: 'Import Failed', message: err.message, type: 'error' });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   // Keep backward-compat helpers
   const compareYearPrimary = compareSelectedYears[0] || '';
   const compareYearSecondary = compareSelectedYears[1] || '';
 
   const COMPARE_YEAR_COLORS = ['#3B82F6', '#8B5CF6', '#F97316', '#10B981', '#EF4444', '#EC4899', '#06B6D4', '#F59E0B'];
+  const COMPARE_YEAR_GRADIENTS = [
+    'url(#gradBlue)',
+    'url(#gradPurple)',
+    'url(#gradOrange)',
+    'url(#gradGreen)',
+    'url(#gradRose)',
+    'url(#gradPink)',
+    'url(#gradTeal)',
+    'url(#gradAmber)'
+  ];
 
   useEffect(() => {
     if (data?.schoolYears) {
@@ -340,6 +777,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           message: 'Student deleted successfully.',
           type: 'success'
         });
+        addActivity('trash', 'pink', `Student ${student.firstName} ${student.lastName} (${student.studentId}) was deleted.`);
         setSelectedStudent(null);
         fetchAdminData();
       } else {
@@ -375,6 +813,66 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
   };
 
+  const executeToggleStudentStatus = async (student) => {
+    const isMock = !student.isDb;
+    const currentStatus = student.status || 'Active';
+    const newStatus = (currentStatus === 'Dropped') ? 'Enrolled' : 'Dropped';
+
+    if (isMock) {
+      setStudentStatusOverrides(prev => ({
+        ...prev,
+        [student.studentId]: newStatus
+      }));
+      setSelectedStudent(prev => prev ? { ...prev, status: newStatus } : null);
+      setCustomAlert({
+        show: true,
+        title: 'Success',
+        message: `Mock student status changed to ${newStatus}.`,
+        type: 'success'
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(getApiUrl('/api/admin/student/status'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          studentId: student.studentId,
+          status: newStatus
+        })
+      });
+      if (res.ok) {
+        setCustomAlert({
+          show: true,
+          title: 'Success',
+          message: `Student status updated to ${newStatus}.`,
+          type: 'success'
+        });
+        addActivity('alert', 'blue', `Student ${student.firstName} ${student.lastName} status changed to ${newStatus}.`);
+        setSelectedStudent(prev => prev ? { ...prev, status: newStatus } : null);
+        fetchAdminData();
+      } else {
+        setCustomAlert({
+          show: true,
+          title: 'Error',
+          message: 'Failed to update student status.',
+          type: 'error'
+        });
+      }
+    } catch (err) {
+      console.error('Error updating student status:', err);
+      setCustomAlert({
+        show: true,
+        title: 'Error',
+        message: 'Failed to update student status.',
+        type: 'error'
+      });
+    }
+  };
+
   const executeDeleteTeacher = async (teacher) => {
     const isMock = !teacher.isDb;
     if (isMock) {
@@ -394,6 +892,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           message: 'Teacher deleted successfully.',
           type: 'success'
         });
+        addActivity('trash', 'pink', `Teacher ${teacher.name} (${teacher.id}) was deleted.`);
         setSelectedTeacher(null);
         fetchAdminData();
       } else {
@@ -429,6 +928,158 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
   };
 
+  // ─── Edit Student Details ───
+  const handleEditStudent = (student) => {
+    setEditStudentForm({
+      name: `${student.firstName} ${student.lastName}`.trim(),
+      gender: student.gender || 'Male',
+      gradeLevel: student.gradeLevel || '',
+      section: student.section || '',
+      parentName: student.parentName || '',
+      parentPhone: student.parentPhone || '',
+      address: student.address || '',
+      lrn: student.lrn || '',
+    });
+    setIsEditingStudent(true);
+  };
+
+  const handleSaveStudent = async () => {
+    if (!selectedStudent) return;
+    const isMock = !selectedStudent.isDb;
+    if (isMock) {
+      setCustomAlert({ show: true, title: 'Info', message: 'Mock students cannot be edited permanently.', type: 'warning' });
+      setIsEditingStudent(false);
+      return;
+    }
+
+    setEditStudentLoading(true);
+    try {
+      const res = await fetch(getApiUrl(`/api/admin/student/${selectedStudent.studentId}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editStudentForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setCustomAlert({ show: true, title: 'Success', message: 'Student details updated successfully.', type: 'success' });
+        addActivity('edit', 'blue', `Student ${editStudentForm.name} details updated.`);
+        setIsEditingStudent(false);
+        // Update selected student in place
+        const nameParts = (editStudentForm.name || '').split(' ');
+        setSelectedStudent(prev => ({
+          ...prev,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          gender: editStudentForm.gender,
+          gradeLevel: editStudentForm.gradeLevel,
+          section: editStudentForm.section,
+          parentName: editStudentForm.parentName,
+          parentPhone: editStudentForm.parentPhone,
+          address: editStudentForm.address,
+          lrn: editStudentForm.lrn,
+        }));
+        fetchAdminData();
+      } else {
+        setCustomAlert({ show: true, title: 'Error', message: 'Failed to update student details.', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Error updating student:', err);
+      setCustomAlert({ show: true, title: 'Error', message: 'Network error updating student.', type: 'error' });
+    } finally {
+      setEditStudentLoading(false);
+    }
+  };
+
+  // ─── Edit Teacher Details ───
+  const handleEditTeacher = (teacher) => {
+    setEditTeacherForm({
+      name: teacher.name || '',
+      subject: teacher.subject || '',
+      gradeLevel: teacher.gradeLevel || '',
+      section: teacher.section || '',
+      phone: teacher.phone || '',
+      email: teacher.email || '',
+      address: teacher.address || '',
+      type: teacher.type || 'Full-Time',
+    });
+    setIsEditingTeacher(true);
+  };
+
+  const handleSaveTeacher = async () => {
+    if (!selectedTeacher) return;
+    const isMock = !selectedTeacher.isDb;
+    if (isMock) {
+      setCustomAlert({ show: true, title: 'Info', message: 'Mock teachers cannot be edited permanently.', type: 'warning' });
+      setIsEditingTeacher(false);
+      return;
+    }
+
+    setEditTeacherLoading(true);
+    try {
+      const res = await fetch(getApiUrl(`/api/admin/teacher/${selectedTeacher.id}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editTeacherForm)
+      });
+      if (res.ok) {
+        setCustomAlert({ show: true, title: 'Success', message: 'Teacher details updated successfully.', type: 'success' });
+        addActivity('edit', 'blue', `Teacher ${editTeacherForm.name} details updated.`);
+        setIsEditingTeacher(false);
+        setSelectedTeacher(prev => ({
+          ...prev,
+          name: editTeacherForm.name,
+          subject: editTeacherForm.subject,
+          gradeLevel: editTeacherForm.gradeLevel,
+          section: editTeacherForm.section,
+          phone: editTeacherForm.phone,
+          email: editTeacherForm.email,
+          address: editTeacherForm.address,
+          type: editTeacherForm.type,
+        }));
+        fetchAdminData();
+      } else {
+        setCustomAlert({ show: true, title: 'Error', message: 'Failed to update teacher details.', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Error updating teacher:', err);
+      setCustomAlert({ show: true, title: 'Error', message: 'Network error updating teacher.', type: 'error' });
+    } finally {
+      setEditTeacherLoading(false);
+    }
+  };
+
+  const handleSaveAccountCredentials = async (accountId) => {
+    if (!editAccountForm.username || editAccountForm.username.trim() === '') {
+      setCustomAlert({ show: true, title: 'Error', message: 'Username cannot be empty.', type: 'error' });
+      return;
+    }
+    setEditAccountLoading(true);
+    try {
+      const res = await fetch(getApiUrl(`/api/admin/user/${accountId}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: editAccountForm.username,
+          password: editAccountForm.password || undefined // only update password if provided
+        })
+      });
+      if (res.ok) {
+        setCustomAlert({ show: true, title: 'Success', message: 'Account credentials updated successfully.', type: 'success' });
+        setEditingAccountId(null);
+        setEditAccountForm({ username: '', password: '' });
+        fetchAdminData();
+      } else {
+        const errorData = await res.json();
+        setCustomAlert({ show: true, title: 'Error', message: errorData.error || 'Failed to update credentials.', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Error updating account credentials:', err);
+      setCustomAlert({ show: true, title: 'Error', message: 'Network error updating credentials.', type: 'error' });
+    } finally {
+      setEditAccountLoading(false);
+    }
+  };
+
   const globalYears = data?.schoolYears ? Object.keys(data.schoolYears).sort().reverse() : ['S.Y. 2025-2026'];
 
   // Get data for the selected school year
@@ -462,22 +1113,337 @@ const AdminDashboard = ({ user, onLogout }) => {
   const supportStaff = data?.users?.filter(u => u.role !== 'Teacher' && u.role !== 'Student').length || 34;
   const totalAwards = 152;
 
-  const schoolInsights = [
-    { id: 1, type: 'warning', section: 'Grade 6 - Sampaguita', title: 'High Absenteeism Rate', description: 'Absenteeism is 15% above target. Consider parent-teacher interventions and home visitation programs.', time: 'Today', impact: 'HIGH' },
-    { id: 2, type: 'success', section: 'Grade 1 - Mabini', title: 'Strong Enrollment Growth', description: 'Next year\'s enrollment is projected to exceed targets by 12% based on current trends. Great work from the admissions team.', time: 'Yesterday', impact: 'MEDIUM' },
-    { id: 3, type: 'idea', section: 'Grade 4 - Aguinaldo', title: 'Resource Optimization', description: 'Underutilized classrooms detected. Consider consolidating sections to optimize teacher allocation.', time: '2 Days Ago', impact: 'HIGH' },
-    { id: 4, type: 'warning', section: 'Kinder - Section A', title: 'Low Reading Proficiency', description: 'Reading proficiency dropped to 68%. Re-evaluate literacy programs and schedule remedial reading sessions.', time: 'Today', impact: 'MEDIUM' },
-    { id: 5, type: 'success', section: 'Grade 3 - Del Pilar', title: 'Excellent Math Scores', description: 'Average math scores reached 92/100 consistently over the past quarterly exam. Outstanding teaching methodology.', time: '3 Days Ago', impact: 'HIGH' },
-    { id: 6, type: 'warning', section: 'Grade 5 - Gomez', title: 'Elevated Dropout Risk', description: `Currently ${totalDropouts} student(s) have dropped out this school year. Dropout prevention is critical — every student lost impacts the school's completion rate, DepEd performance indicators, and the child's future opportunities. Immediate home visitation and counseling are recommended.`, time: 'Yesterday', impact: 'HIGH' },
-    { id: 7, type: 'idea', section: 'Grade 2 - Rizal', title: 'Digital Learning Opportunity', description: 'Local tech partners expressed interest in donating tablets. Follow up to secure long-term digital learning resources.', time: 'Today', impact: 'MEDIUM' },
-    { id: 8, type: 'success', section: 'All Sections', title: 'Compliance Audit Passed', description: 'School passed the DepEd compliance audit with flying colors (98/100). All documentation is up to date.', time: '1 Week Ago', impact: 'LOW' },
-    { id: 9, type: 'idea', section: 'School-Wide', title: 'Standardize Assessment Tools', description: 'Grading variances across sections noticed. Suggesting a unified rubric rollout for Q4 exams.', time: '2 Weeks Ago', impact: 'HIGH' },
-    { id: 10, type: 'idea', section: 'Grade 1 - Bonifacio', title: 'AI-Assisted Tutoring', description: 'Implement AI-driven adaptive learning modules to personalize instruction and reduce remedial class load by 25%.', time: 'Today', impact: 'MEDIUM' },
-    { id: 11, type: 'warning', section: 'School-Wide', title: 'Dropout Early Warning Signs', description: `${totalDropouts} dropout(s) recorded so far. Studies show that chronic absenteeism (missing 10%+ of school days), failing grades, and disengagement are the top 3 early warning signs. Teachers should flag at-risk students immediately for intervention.`, time: 'Today', impact: 'HIGH' },
-    { id: 12, type: 'idea', section: 'School-Wide', title: 'Dropout Prevention Program', description: 'Implement a structured dropout prevention program: (1) Weekly attendance monitoring, (2) Parent-teacher home visits for absent students, (3) Financial assistance referrals for families in need, (4) Peer mentoring and after-school support programs. Early intervention can reduce dropout rates by up to 40%.', time: 'Today', impact: 'HIGH' },
-    { id: 13, type: 'warning', section: 'School-Wide', title: 'Dropout Impact on School Performance', description: `With ${totalDropouts} dropout(s), the school completion rate is affected. DepEd tracks dropout rates as a key performance metric — high dropout rates may result in lower school ratings, reduced MOOE allocation, and required corrective action plans. Every student retained strengthens the school's standing.`, time: 'Today', impact: 'HIGH' },
-    { id: 14, type: 'success', section: 'School-Wide', title: 'Dropout Rate Below National Average', description: `The current dropout count of ${totalDropouts} keeps Valdez Elementary below the national average dropout rate of 2.5%. Continued monitoring and proactive interventions are essential to maintain this positive trend and ensure every child completes their elementary education.`, time: 'This Week', impact: 'MEDIUM' },
-  ];
+  // Dynamic Retention Rate (100% - dropout%)
+  const retentionRate = totalStudents > 0 
+    ? (((totalStudents - totalDropouts) / totalStudents) * 100).toFixed(1)
+    : '98.5';
+
+  // Teacher year-over-year trend
+  const teacherTrendPercent = (() => {
+    if (!data?.schoolYears) return '-1.2';
+    const years = Object.keys(data.schoolYears).sort();
+    if (years.length < 2) return '0.0';
+    const currIdx = years.indexOf(selectedYear);
+    const prevIdx = currIdx > 0 ? currIdx - 1 : (years.length >= 2 ? years.length - 2 : -1);
+    if (prevIdx < 0 || prevIdx === currIdx) return '0.0';
+    const prevTeachers = data.schoolYears[years[prevIdx]]?.totalTeachers || activeTeachers;
+    if (prevTeachers === 0) return '0.0';
+    return (((activeTeachers - prevTeachers) / prevTeachers) * 100).toFixed(1);
+  })();
+
+  // Campus Operations from DB
+  const campusTotalRooms = currentYearData?.totalClassrooms || data?.schoolData?.totalClassrooms || 42;
+  const campusActiveRooms = Math.max(1, campusTotalRooms - Math.floor(campusTotalRooms * 0.1));
+  const campusTotalSeats = currentYearData?.totalSeats || data?.schoolData?.totalSeats || 461;
+
+  const schoolInsights = useMemo(() => {
+    const insights = [];
+    let idCounter = 1;
+
+    const currentYearClassrooms = currentYearData?.classrooms || data?.classrooms || [];
+    const allDbStudents = data?.students || [];
+
+    // --- 1. OVERALL ENROLLMENT TREND ---
+    if (data?.schoolYears) {
+      const years = Object.keys(data.schoolYears).sort();
+      const currIdx = years.indexOf(selectedYear);
+      if (currIdx > 0) {
+        const prevYear = years[currIdx - 1];
+        const currentYearStudents = data.schoolYears[selectedYear]?.totalStudents || 0;
+        const prevYearStudents = data.schoolYears[prevYear]?.totalStudents || 0;
+        if (prevYearStudents > 0) {
+          const diff = currentYearStudents - prevYearStudents;
+          const pct = ((diff / prevYearStudents) * 100).toFixed(1);
+          if (diff > 0) {
+            insights.push({
+              id: idCounter++,
+              type: 'success',
+              section: 'School-Wide',
+              title: 'Strong Enrollment Growth',
+              description: `Enrollment for ${selectedYear} increased by +${pct}% (+${diff} students) compared to the previous year (${prevYear}). Great work on student retention!`,
+              time: 'Today',
+              impact: 'MEDIUM'
+            });
+          } else if (diff < 0) {
+            insights.push({
+              id: idCounter++,
+              type: 'warning',
+              section: 'School-Wide',
+              title: 'Enrollment Decline',
+              description: `Enrollment for ${selectedYear} dropped by ${pct}% (${diff} students) compared to ${prevYear}. Demographics or retention strategies should be reviewed.`,
+              time: 'Today',
+              impact: 'HIGH'
+            });
+          }
+        }
+      }
+    }
+
+    // --- 2. DROPOUTS ALERTS ---
+    const censusDropouts = currentYearData?.totalDropouts || 0;
+    const activeGradeStudents = allDbStudents.filter(st => {
+      return selectedGrade === 'All Grades' || st.gradeLevel === selectedGrade;
+    });
+    const databaseDropouts = activeGradeStudents.filter(st => st.status === 'Dropped').length;
+
+    if (censusDropouts > 0 || databaseDropouts > 0) {
+      const dropoutCount = Math.max(censusDropouts, databaseDropouts);
+      insights.push({
+        id: idCounter++,
+        type: 'warning',
+        section: selectedGrade === 'All Grades' ? 'School-Wide' : selectedGrade,
+        title: 'Elevated Dropout Risk',
+        description: `Currently, ${dropoutCount} student(s) are recorded as dropped out in ${selectedGrade === 'All Grades' ? selectedYear : selectedGrade}. Dropout prevention is critical; early parent outreach and attendance monitoring are recommended.`,
+        time: 'Today',
+        impact: 'HIGH'
+      });
+    } else {
+      insights.push({
+        id: idCounter++,
+        type: 'success',
+        section: 'School-Wide',
+        title: 'Zero Dropouts Maintained',
+        description: 'Outstanding dropout prevention! The school maintains a 0% dropout rate for this selection.',
+        time: 'This Week',
+        impact: 'MEDIUM'
+      });
+    }
+
+    // Classroom-specific dropouts
+    currentYearClassrooms.forEach(room => {
+      const gMatch = selectedGrade === 'All Grades' || room.gradeLevel === selectedGrade;
+      const sMatch = selectedSection === 'All Sections' || room.section === selectedSection;
+      if (gMatch && sMatch && room.dropouts > 0) {
+        insights.push({
+          id: idCounter++,
+          type: 'warning',
+          section: `${room.gradeLevel} - ${room.section}`,
+          title: 'Classroom Dropout Alert',
+          description: `Section ${room.section} has recorded ${room.dropouts} dropout(s). Immediate counselor home visits and family support are suggested.`,
+          time: 'Yesterday',
+          impact: 'HIGH'
+        });
+      }
+    });
+
+    // --- 3. REPEATERS INTERVENTION ---
+    const censusRepeaters = currentYearData?.totalRepeaters || 0;
+    if (censusRepeaters > 0) {
+      insights.push({
+        id: idCounter++,
+        type: 'idea',
+        section: 'School-Wide',
+        title: 'Remediation Program Suggestion',
+        description: `With ${censusRepeaters} repeaters registered, launching a standardized after-school peer-mentoring and tutor network could reduce achievement gaps.`,
+        time: 'Yesterday',
+        impact: 'MEDIUM'
+      });
+    }
+
+    currentYearClassrooms.forEach(room => {
+      const gMatch = selectedGrade === 'All Grades' || room.gradeLevel === selectedGrade;
+      const sMatch = selectedSection === 'All Sections' || room.section === selectedSection;
+      if (gMatch && sMatch && room.repeaters > 0) {
+        insights.push({
+          id: idCounter++,
+          type: 'idea',
+          section: `${room.gradeLevel} - ${room.section}`,
+          title: 'Targeted Remediation Required',
+          description: `${room.gradeLevel} (${room.section}) has ${room.repeaters} repeating student(s). Implement weekly diagnostic quizzes and learning aids.`,
+          time: '2 Days Ago',
+          impact: 'MEDIUM'
+        });
+      }
+    });
+
+    // --- 4. CLASSROOM CAPACITY & RATIOS (OVERCROWDING & SEATS) ---
+    currentYearClassrooms.forEach(room => {
+      const gMatch = selectedGrade === 'All Grades' || room.gradeLevel === selectedGrade;
+      const sMatch = selectedSection === 'All Sections' || room.section === selectedSection;
+      if (gMatch && sMatch) {
+        const enrollment = room.enrollment || 0;
+        const seatsVal = parseInt(room.seats) || 0;
+
+        if (enrollment > 40) {
+          insights.push({
+            id: idCounter++,
+            type: 'warning',
+            section: `${room.gradeLevel} - ${room.section}`,
+            title: 'Overcrowded Classroom',
+            description: `Section ${room.section} contains ${enrollment} students, exceeding DepEd's standard of 40. Consider opening a new section to improve instruction.`,
+            time: 'Today',
+            impact: 'HIGH'
+          });
+        }
+
+        if (seatsVal > 0 && enrollment > seatsVal) {
+          insights.push({
+            id: idCounter++,
+            type: 'warning',
+            section: `${room.gradeLevel} - ${room.section}`,
+            title: 'Seat Capacity Exceeded',
+            description: `${room.gradeLevel} section has ${enrollment} students but only ${seatsVal} available desks/seats. Procuring ${enrollment - seatsVal} additional seats is urgent.`,
+            time: 'Today',
+            impact: 'HIGH'
+          });
+        } else if (seatsVal > 0 && enrollment >= seatsVal * 0.9) {
+          insights.push({
+            id: idCounter++,
+            type: 'idea',
+            section: `${room.gradeLevel} - ${room.section}`,
+            title: 'High Seating Utilization',
+            description: `${room.gradeLevel} (${room.section}) is utilizing ${(enrollment / seatsVal * 100).toFixed(0)}% of its seating capacity (${enrollment}/${seatsVal}). Seating arrangement is tight.`,
+            time: 'Yesterday',
+            impact: 'LOW'
+          });
+        } else if (seatsVal > 0 && enrollment > 0 && enrollment < seatsVal * 0.5) {
+          insights.push({
+            id: idCounter++,
+            type: 'success',
+            section: `${room.gradeLevel} - ${room.section}`,
+            title: 'Comfortable Spacing',
+            description: `Spacious environment in ${room.section} with seating utilization under 50% (${enrollment}/${seatsVal} seats filled). Ideal for interactive learning.`,
+            time: 'Yesterday',
+            impact: 'LOW'
+          });
+        }
+
+        if (enrollment > 0 && enrollment < 20) {
+          insights.push({
+            id: idCounter++,
+            type: 'idea',
+            section: `${room.gradeLevel} - ${room.section}`,
+            title: 'Resource Optimization Opportunity',
+            description: `Only ${enrollment} students enrolled in ${room.gradeLevel} - ${room.section}. Consolidation or teacher reallocation may optimize operation.`,
+            time: 'Today',
+            impact: 'MEDIUM'
+          });
+        }
+
+        if (!room.teachers || room.teachers === 0) {
+          insights.push({
+            id: idCounter++,
+            type: 'warning',
+            section: `${room.gradeLevel} - ${room.section}`,
+            title: 'Unassigned Classroom Adviser',
+            description: `No adviser has been assigned to ${room.gradeLevel} - ${room.section}. Assign a teacher immediately to handle classes.`,
+            time: 'Today',
+            impact: 'HIGH'
+          });
+        }
+      }
+    });
+
+    // --- 5. ACADEMIC FAILING & HIGH PERFORMANCE ALERTS ---
+    const failingStudents = [];
+    const subjectFails = {};
+    const sectionAverages = {};
+    const sectionCounts = {};
+
+    allDbStudents.forEach(st => {
+      const gMatch = selectedGrade === 'All Grades' || st.gradeLevel === selectedGrade;
+      const sMatch = selectedSection === 'All Sections' || st.section === selectedSection;
+      if (!gMatch || !sMatch) return;
+
+      let hasFail = false;
+      let totalGradeSum = 0;
+      let totalGradeCount = 0;
+
+      if (st.grades) {
+        Object.entries(st.grades).forEach(([subj, qGrades]) => {
+          if (qGrades) {
+            Object.values(qGrades).forEach(score => {
+              if (score !== null && score !== undefined && score !== '') {
+                const numScore = Number(score);
+                if (numScore > 0) {
+                  totalGradeSum += numScore;
+                  totalGradeCount++;
+                  if (numScore < 75) {
+                    hasFail = true;
+                    subjectFails[subj] = (subjectFails[subj] || 0) + 1;
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+
+      if (hasFail) {
+        failingStudents.push(st.name || `${st.firstName} ${st.lastName}`);
+      }
+
+      if (totalGradeCount > 0) {
+        const studentAvg = totalGradeSum / totalGradeCount;
+        const classKey = `${st.gradeLevel} - ${st.section}`;
+        sectionAverages[classKey] = (sectionAverages[classKey] || 0) + studentAvg;
+        sectionCounts[classKey] = (sectionCounts[classKey] || 0) + 1;
+      }
+    });
+
+    if (failingStudents.length > 0) {
+      const topFailedSubject = Object.entries(subjectFails).sort((a, b) => b[1] - a[1])[0]?.[0];
+      const subjectText = topFailedSubject ? `, particularly in ${topFailedSubject}` : '';
+      insights.push({
+        id: idCounter++,
+        type: 'warning',
+        section: selectedGrade === 'All Grades' ? 'School-Wide' : selectedGrade,
+        title: 'Academic Intervention Required',
+        description: `${failingStudents.length} student(s) scored below the passing mark of 75 in quarterly grades${subjectText}. Launch remedial reading and math programs immediately.`,
+        time: 'Today',
+        impact: 'HIGH'
+      });
+    }
+
+    Object.entries(sectionCounts).forEach(([classKey, count]) => {
+      if (count > 0) {
+        const avg = sectionAverages[classKey] / count;
+        if (avg >= 85) {
+          insights.push({
+            id: idCounter++,
+            type: 'success',
+            section: classKey,
+            title: 'Outstanding Academic Performance',
+            description: `${classKey} has achieved a high average grade of ${avg.toFixed(1)}% across quarterly tracking database. Excellent instructional results!`,
+            time: 'Yesterday',
+            impact: 'HIGH'
+          });
+        }
+      }
+    });
+
+    if (insights.length < 3) {
+      insights.push({
+        id: idCounter++,
+        type: 'success',
+        section: 'School-Wide',
+        title: 'Compliance Audit Passed',
+        description: "School passed the DepEd compliance and curriculum quality review with flying colors (98/100). All documents are current.",
+        time: '1 Week Ago',
+        impact: 'LOW'
+      });
+      insights.push({
+        id: idCounter++,
+        type: 'idea',
+        section: 'School-Wide',
+        title: 'Standardize Assessment Tools',
+        description: 'Suggest rolling out standard assessment rubrics across sections to minimize grading variance in local gradesheet views.',
+        time: 'Today',
+        impact: 'MEDIUM'
+      });
+      insights.push({
+        id: idCounter++,
+        type: 'idea',
+        section: 'School-Wide',
+        title: 'Digital Learning Opportunity',
+        description: 'Local technology partners expressed interest in donating digital learning tablets. Coordinate with the division office to finalize guidelines.',
+        time: 'Today',
+        impact: 'MEDIUM'
+      });
+    }
+
+    return insights;
+  }, [data, selectedYear, selectedGrade, selectedSection]);
 
   const filteredInsights = schoolInsights.filter(i => {
     const typeMatch = insightsFilter === 'All' || i.type === insightsFilter.toLowerCase();
@@ -492,18 +1458,30 @@ const AdminDashboard = ({ user, onLogout }) => {
     ideas: schoolInsights.filter(i => i.type === 'idea').length,
   };
 
-  const dynamicGenderData = () => {
-    const total = totalStudents || 502;
-    const ratio = 560 / 1245;
+  const dynamicGenderData = (gradeFilter) => {
+    const filterGrade = gradeFilter || 'All Grades';
+    let total;
+    if (filterGrade === 'All Grades') {
+      total = totalStudents || 502;
+    } else {
+      total = filteredClassrooms
+        .filter(c => c.gradeLevel === filterGrade)
+        .reduce((sum, c) => sum + (c.enrollment || c.bosyEnrollment || 0), 0) || 50;
+    }
+    // Use a seed from filterGrade to vary the ratio slightly per grade
+    const seed = filterGrade.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const ratio = 0.42 + ((seed % 16) / 100); // varies ~42-58%
     const boys = Math.round(total * ratio);
     const girls = total - boys;
     
     return [
-      { name: 'Boys', value: boys, color: '#1E3A8A' },
-      { name: 'Girls', value: girls, color: '#FB7185' }
+      { name: 'Boys', value: boys, color: '#3B82F6' },
+      { name: 'Girls', value: girls, color: '#EC4899' }
     ];
   };
-  const computedGender = dynamicGenderData();
+  const computedGender = dynamicGenderData(selectedGrade);
+  const computedGenderFiltered = dynamicGenderData(genderGradeFilter);
+  const genderFilteredTotal = computedGenderFiltered.reduce((s, g) => s + g.value, 0);
 
   const dynamicNotices = () => {
     if (!data?.announcements || data.announcements.length === 0) return null;
@@ -548,13 +1526,15 @@ const AdminDashboard = ({ user, onLogout }) => {
       return newItem;
     });
 
-    const colorPalette = ['#06B6D4', '#FB7185', '#1E3A8A', '#F472B6', '#3B82F6', '#2DD4BF', '#FBBF24'];
+    const colorPalette = ['#06B6D4', '#F43F5E', '#3B82F6', '#EC4899', '#F97316', '#8B5CF6', '#F59E0B'];
+    const gradientPalette = ['url(#gradTeal)', 'url(#gradRose)', 'url(#gradBlue)', 'url(#gradPink)', 'url(#gradOrange)', 'url(#gradPurple)', 'url(#gradAmber)'];
 
     return { 
       data: dynamicData, 
       grades: labels.map(l => `grade${rawLabels.indexOf(l)}`), 
       labels: labels,
-      colors: labels.map(l => colorPalette[rawLabels.indexOf(l) % colorPalette.length])
+      colors: labels.map(l => colorPalette[rawLabels.indexOf(l) % colorPalette.length]),
+      gradients: labels.map(l => gradientPalette[rawLabels.indexOf(l) % gradientPalette.length])
     };
   };
   const computedPerf = dynamicPerformance();
@@ -654,6 +1634,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         <div className="rep-premium-analytics-header" style={{justifyContent: 'flex-end', gap: '12px'}}>
           <button className="rep-dropdown" onClick={() => setShowClassroomSizeModal(true)}>Classroom Size</button>
           <button className="rep-dropdown" onClick={() => setShowCompareYearModal(true)}>Compare Year <ChevronDown size={14}/></button>
+          <button className="rep-dropdown" onClick={() => setShowExportImportModal(true)} style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Download size={14}/> S.Y. 2020-2027 Export/Import</button>
         </div>
 
         <div className="rep-premium-kpis">
@@ -670,7 +1651,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           <div className="rep-premium-kpi-card">
             <div className="rep-premium-kpi-top">
               <div className="rep-premium-kpi-icon" style={{color: '#EF4444', backgroundColor: 'rgba(239,68,68,0.1)'}}><Briefcase size={16}/></div>
-              <div className="rep-premium-trend-badge down"><ArrowDownIcon/> -1.2%</div>
+              <div className={`rep-premium-trend-badge ${parseFloat(teacherTrendPercent) >= 0 ? 'up' : 'down'}`}>{parseFloat(teacherTrendPercent) >= 0 ? <ArrowUpIcon/> : <ArrowDownIcon/>} {parseFloat(teacherTrendPercent) >= 0 ? '+' : ''}{teacherTrendPercent}%</div>
             </div>
             <div>
               <div className="rep-premium-kpi-label">Active Teachers</div>
@@ -690,11 +1671,11 @@ const AdminDashboard = ({ user, onLogout }) => {
           <div className="rep-premium-kpi-card">
             <div className="rep-premium-kpi-top">
               <div className="rep-premium-kpi-icon" style={{color: '#6366F1', backgroundColor: 'rgba(99,102,241,0.1)'}}><Award size={16}/></div>
-              <div className="rep-premium-trend-badge up"><ArrowUpIcon/> +0.8%</div>
+              <div className={`rep-premium-trend-badge ${parseFloat(retentionRate) >= 95 ? 'up' : 'down'}`}>{parseFloat(retentionRate) >= 95 ? <ArrowUpIcon/> : <ArrowDownIcon/>} {retentionRate}%</div>
             </div>
             <div>
               <div className="rep-premium-kpi-label">Retention Rate</div>
-              <h3 className="rep-premium-kpi-value">98.5%</h3>
+              <h3 className="rep-premium-kpi-value">{retentionRate}%</h3>
             </div>
           </div>
           <div className="rep-premium-kpi-card">
@@ -722,15 +1703,22 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <AreaChart data={yearlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
+                        <stop offset="0%" stopColor="#F97316" stopOpacity={0.4}/>
+                        <stop offset="100%" stopColor="#EC4899" stopOpacity={0}/>
                       </linearGradient>
+                      <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
                     <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'var(--text-gray)', fontSize: 10}} />
                     <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--text-gray)', fontSize: 10}} />
-                    <Tooltip contentStyle={{backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-color)'}} />
-                    <Area type="monotone" dataKey="value" stroke="#F97316" strokeWidth={3} fillOpacity={1} fill="url(#colorTrend)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="value" stroke="#F97316" strokeWidth={3} fillOpacity={1} fill="url(#colorTrend)" filter="url(#chartGlow)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -749,10 +1737,10 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={gradeData} innerRadius={50} outerRadius={75} paddingAngle={2} dataKey="value" stroke="none" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
+                      <Pie data={gradeData} innerRadius={50} outerRadius={75} paddingAngle={2} cornerRadius={4} dataKey="value" stroke="var(--bg-panel)" strokeWidth={3} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
                         {gradeData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none'}}>
@@ -775,9 +1763,15 @@ const AdminDashboard = ({ user, onLogout }) => {
               {isChartReady ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyActivity} margin={{ top: 10, right: 0, left: -25, bottom: 0 }} barSize={12}>
+                    <defs>
+                      <linearGradient id="weeklyGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#EF4444" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.25}/>
+                      </linearGradient>
+                    </defs>
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} />
-                    <Tooltip cursor={{fill: 'var(--bg-main)'}} />
-                    <Bar dataKey="val" fill="#EF4444" radius={[2, 2, 0, 0]} background={{ fill: 'var(--bg-main)' }} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                    <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.03)'}} />
+                    <Bar dataKey="val" fill="url(#weeklyGrad)" radius={[4, 4, 0, 0]} background={{ fill: 'var(--chart-bg-track)', radius: [4, 4, 0, 0] }} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -794,11 +1788,36 @@ const AdminDashboard = ({ user, onLogout }) => {
             <div className="rep-premium-line-chart">
               {isChartReady ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={yearlyData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
-                    <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#10B981" strokeWidth={3} dot={false} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                  <LineChart data={computedPerf.data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                    <defs>
+                      <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} tickFormatter={(v) => `${v}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    {computedPerf.grades.map((g, idx) => (
+                      <Line 
+                        key={idx} 
+                        type="monotone" 
+                        dataKey={g} 
+                        name={computedPerf.labels[idx]} 
+                        stroke={computedPerf.colors[idx]} 
+                        strokeWidth={3} 
+                        filter="url(#chartGlow)" 
+                        dot={{ r: 3, fill: computedPerf.colors[idx], strokeWidth: 1.5, stroke: 'var(--bg-panel)' }} 
+                        activeDot={{ r: 5, strokeWidth: 0 }} 
+                        isAnimationActive={true} 
+                        animationDuration={1200} 
+                        animationEasing="ease-out" 
+                      />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
@@ -816,11 +1835,17 @@ const AdminDashboard = ({ user, onLogout }) => {
               {isChartReady ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={radarData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                    <defs>
+                      <linearGradient id="subjectGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.6}/>
+                        <stop offset="100%" stopColor="#EC4899" stopOpacity={0.05}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
                     <XAxis dataKey="subject" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} />
                     <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fill: 'var(--text-gray)'}} />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="score" fill="#8B5CF6" stroke="#8B5CF6" fillOpacity={0.2} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="score" fill="url(#subjectGrad)" stroke="#8B5CF6" strokeWidth={2} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                     <Line type="monotone" dataKey="avg" stroke="#64748B" strokeWidth={2} dot={false} strokeDasharray="3 3" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -838,27 +1863,24 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <div className="rep-premium-card-action" style={{color: '#F97316', cursor: 'pointer'}} onClick={() => setShowInsightsModal(true)}>View All &rarr;</div>
               </div>
               <div className="rep-premium-insight-list">
-                <div className="rep-premium-insight-item">
-                  <div className="rep-premium-insight-icon red"><AlertCircle size={14}/></div>
-                  <div className="rep-premium-insight-content">
-                    <h4>High Absenteeism Rate</h4>
-                    <p>Grade 6 absenteeism is 15% above target. Consider parent-teacher interventions.</p>
+                {schoolInsights.slice(0, 3).map((insight) => (
+                  <div className="rep-premium-insight-item" key={insight.id}>
+                    <div className={`rep-premium-insight-icon ${insight.type === 'warning' ? 'red' : insight.type === 'success' ? 'green' : 'yellow'}`}>
+                      {insight.type === 'warning' && <AlertCircle size={14}/>}
+                      {insight.type === 'success' && <Check size={14}/>}
+                      {insight.type === 'idea' && <Lightbulb size={14}/>}
+                    </div>
+                    <div className="rep-premium-insight-content">
+                      <h4>{insight.title}</h4>
+                      <p>{insight.description}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="rep-premium-insight-item">
-                  <div className="rep-premium-insight-icon green"><Check size={14}/></div>
-                  <div className="rep-premium-insight-content">
-                    <h4>Strong Enrollment Growth</h4>
-                    <p>Next year's enrollment is projected to exceed targets by 12% based on current trends.</p>
+                ))}
+                {schoolInsights.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748B', fontSize: '13px' }}>
+                    No active insights at this time.
                   </div>
-                </div>
-                <div className="rep-premium-insight-item">
-                  <div className="rep-premium-insight-icon yellow"><Lightbulb size={14}/></div>
-                  <div className="rep-premium-insight-content">
-                    <h4>Resource Optimization</h4>
-                    <p>Underutilized classrooms detected. Consider consolidating Grade 4 sections.</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -871,11 +1893,11 @@ const AdminDashboard = ({ user, onLogout }) => {
               <div className="rep-premium-branch-ops">
                 <div className="rep-premium-branch-stat">
                   <span>Total Rooms</span>
-                  <h4>42</h4>
+                  <h4>{campusTotalRooms}</h4>
                 </div>
                 <div className="rep-premium-branch-stat">
                   <span>Active</span>
-                  <h4>38</h4>
+                  <h4>{campusActiveRooms}</h4>
                 </div>
               </div>
 
@@ -885,25 +1907,25 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <div className="rep-premium-insight-icon red" style={{width: 20, height: 20}}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg></div>
                     <div>
                       <h5>Main Building</h5>
-                      <p>Optimal</p>
+                      <p>{totalStudents > campusTotalSeats * 0.85 ? 'High Volume' : 'Optimal'}</p>
                     </div>
                   </div>
                   <div className="rep-premium-branch-item-right">
-                    <h5>850</h5>
-                    <p className="text-green">+5%</p>
+                    <h5>{campusTotalSeats}</h5>
+                    <p className="text-green">seats</p>
                   </div>
                 </div>
                 <div className="rep-premium-branch-item">
                   <div className="rep-premium-branch-item-left">
                     <div className="rep-premium-insight-icon red" style={{width: 20, height: 20}}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg></div>
                     <div>
-                      <h5>Science Wing</h5>
-                      <p>High Volume</p>
+                      <h5>Sections</h5>
+                      <p>{globalClassrooms.length} active</p>
                     </div>
                   </div>
                   <div className="rep-premium-branch-item-right">
-                    <h5>320</h5>
-                    <p className="text-green">+2%</p>
+                    <h5>{activeTeachers}</h5>
+                    <p className="text-green">teachers</p>
                   </div>
                 </div>
               </div>
@@ -973,11 +1995,11 @@ const AdminDashboard = ({ user, onLogout }) => {
             
             <div className="rep-stat-card">
               <div className="rep-stat-info">
-                <span className="rep-stat-label">Total Awards</span>
-                <span className="rep-stat-value">{totalAwards}</span>
+                <span className="rep-stat-label">Repeaters Student</span>
+                <span className="rep-stat-value">{totalRepeaters}</span>
               </div>
               <div className="rep-stat-icon pink">
-                <Award size={24} />
+                <AlertCircle size={24} />
               </div>
             </div>
           </div>
@@ -999,17 +2021,47 @@ const AdminDashboard = ({ user, onLogout }) => {
               <div className="rep-chart-container" style={{height: 280}}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={computedPerf.data} margin={{ top: 10, right: 20, left: -10, bottom: 0 }} barGap={4} barSize={12}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748B'}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748B'}} tickFormatter={(value) => `${value}%`} />
-                    <Tooltip cursor={{fill: 'transparent'}} />
+                    <defs>
+                      <linearGradient id="gradTeal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#0891B2" stopOpacity={0.25}/>
+                      </linearGradient>
+                      <linearGradient id="gradRose" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#BE123C" stopOpacity={0.25}/>
+                      </linearGradient>
+                      <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.25}/>
+                      </linearGradient>
+                      <linearGradient id="gradPink" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#BE185D" stopOpacity={0.25}/>
+                      </linearGradient>
+                      <linearGradient id="gradOrange" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#F97316" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#C2410C" stopOpacity={0.25}/>
+                      </linearGradient>
+                      <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#6D28D9" stopOpacity={0.25}/>
+                      </linearGradient>
+                      <linearGradient id="gradAmber" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#B45309" stopOpacity={0.25}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: 'var(--text-gray)'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: 'var(--text-gray)'}} tickFormatter={(value) => `${value}%`} />
+                    <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.03)'}} />
                     {computedPerf.grades.map((g, idx) => (
                        <Bar 
                          key={idx} 
                          dataKey={g} 
                          name={computedPerf.labels[idx]} 
-                         fill={computedPerf.colors[idx]} 
-                         radius={[4, 4, 4, 4]} 
+                         fill={computedPerf.gradients ? computedPerf.gradients[idx] : computedPerf.colors[idx]} 
+                         radius={[4, 4, 0, 0]} 
                        />
                     ))}
                   </BarChart>
@@ -1024,33 +2076,52 @@ const AdminDashboard = ({ user, onLogout }) => {
             <div className="rep-card">
               <div className="rep-card-header">
                 <h3>Students by Gender</h3>
-                <div className="rep-dropdown">Grade 1 <ChevronDown size={14}/></div>
+                <select
+                  className="rep-dropdown"
+                  value={genderGradeFilter}
+                  onChange={(e) => setGenderGradeFilter(e.target.value)}
+                  style={{ cursor: 'pointer', border: '1px solid var(--border-color)', background: 'var(--bg-panel)', color: 'var(--text-dark)', padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}
+                >
+                  <option value="All Grades">All Grades</option>
+                  <option value="Kinder">Kinder</option>
+                  <option value="Grade 1">Grade 1</option>
+                  <option value="Grade 2">Grade 2</option>
+                  <option value="Grade 3">Grade 3</option>
+                  <option value="Grade 4">Grade 4</option>
+                  <option value="Grade 5">Grade 5</option>
+                  <option value="Grade 6">Grade 6</option>
+                </select>
               </div>
               <div className="rep-donut-container">
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie
-                      data={computedGender}
+                      data={computedGenderFiltered}
                       innerRadius={50}
                       outerRadius={70}
-                      paddingAngle={0}
+                      paddingAngle={2}
+                      cornerRadius={4}
                       dataKey="value"
-                      stroke="none"
+                      stroke="var(--bg-panel)"
+                      strokeWidth={3}
+                      isAnimationActive={true}
+                      animationDuration={800}
                     >
-                      {computedGender.map((entry, index) => (
+                      {computedGenderFiltered.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
+                    <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="rep-donut-center">
-                  <span className="rep-donut-total">{totalStudents.toLocaleString()}</span>
+                  <span className="rep-donut-total">{genderFilteredTotal.toLocaleString()}</span>
                 </div>
               </div>
               <div className="rep-donut-legend">
-                {computedGender.map((entry, idx) => (
+                {computedGenderFiltered.map((entry, idx) => (
                   <span key={idx} className="legend-item">
-                    <span className={`dot ${entry.color === '#1E3A8A' ? 'blue' : 'pink'}`}></span> {entry.name}: {entry.value}
+                    <span className="dot" style={{ backgroundColor: entry.color }}></span> {entry.name}: {entry.value}
                   </span>
                 ))}
               </div>
@@ -1064,50 +2135,68 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
               <div className="rep-chart-container" style={{height: 160, marginTop: '1rem'}}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dynamicAttendanceData()} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barSize={30}>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748B'}} />
-                    <Tooltip cursor={{fill: 'transparent'}} />
-                    <Bar dataKey="present" fill="#F472B6" radius={[4, 4, 0, 0]} background={{ fill: '#F1F5F9', radius: [4, 4, 0, 0] }} />
+                  <BarChart data={dynamicAttendanceData()} margin={{ top: 15, right: 0, left: 0, bottom: 0 }} barSize={30}>
+                    <defs>
+                      <linearGradient id="attendanceGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95}/>
+                        <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.25}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: 'var(--text-gray)'}} />
+                    <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
+                    <Bar dataKey="present" fill="url(#attendanceGrad)" radius={[6, 6, 0, 0]} background={{ fill: 'var(--chart-bg-track)', radius: [6, 6, 0, 0] }} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
+                      <LabelList dataKey="present" position="top" fill="var(--text-gray)" fontSize={10} fontWeight={500} formatter={(v) => v.toLocaleString()} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="rep-attendance-labels">
-                <span>1,144</span>
-                <span>1,043</span>
-                <span>933</span>
-                <span>1,089</span>
-                <span>1,089</span>
-              </div>
             </div>
 
-            {/* To Do List */}
+            {/* To Do List — Interactive */}
             <div className="rep-card">
               <div className="rep-card-header">
                 <h3>To Do List</h3>
-                <MoreHorizontal size={20} className="text-gray" />
+                <button onClick={() => setShowTodoInput(!showTodoInput)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600 }}>
+                  {showTodoInput ? <X size={16} /> : <UserPlus size={16} />}
+                  {showTodoInput ? 'Cancel' : 'Add'}
+                </button>
               </div>
+              {showTodoInput && (
+                <div style={{ display: 'flex', gap: '8px', padding: '0 16px 12px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    value={newTodoText}
+                    onChange={(e) => setNewTodoText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+                    placeholder="Add a new task..."
+                    style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-dark)', fontSize: '12px', outline: 'none' }}
+                  />
+                  <button onClick={addTodo} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#3B82F6', color: 'white', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Add</button>
+                </div>
+              )}
               <div className="rep-todo-list">
-                <div className="rep-todo-item completed">
-                  <div className="rep-checkbox checked"><Check size={12}/></div>
-                  <div className="rep-todo-text">
-                    <p>Review Teacher Attendance Records</p>
-                    <span>May 11, 2026</span>
+                {todoItems.map(item => (
+                  <div key={item.id} className={`rep-todo-item ${item.completed ? 'completed' : ''}`} style={{ cursor: 'pointer' }}>
+                    <div
+                      className={`rep-checkbox ${item.completed ? 'checked' : ''}`}
+                      onClick={() => toggleTodo(item.id)}
+                    >
+                      {item.completed && <Check size={12}/>}
+                    </div>
+                    <div className="rep-todo-text" onClick={() => toggleTodo(item.id)} style={{ flex: 1 }}>
+                      <p style={{ textDecoration: item.completed ? 'line-through' : 'none', opacity: item.completed ? 0.6 : 1 }}>{item.text}</p>
+                      <span>{item.date}</span>
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); removeTodo(item.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-gray)', padding: '4px', borderRadius: '4px', display: 'flex', alignItems: 'center' }} title="Remove">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
-                </div>
-                <div className="rep-todo-item">
-                  <div className="rep-checkbox"></div>
-                  <div className="rep-todo-text">
-                    <p>Prepare Science Fair Guidelines</p>
-                    <span>May 13, 2026</span>
+                ))}
+                {todoItems.length === 0 && (
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-gray)', fontSize: '13px' }}>
+                    No tasks yet. Click "Add" to create one.
                   </div>
-                </div>
-                <div className="rep-todo-item">
-                  <div className="rep-checkbox"></div>
-                  <div className="rep-todo-text">
-                    <p>Update Library Book Inventory</p>
-                    <span>May 14, 2026</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -1118,95 +2207,78 @@ const AdminDashboard = ({ user, onLogout }) => {
         {/* Right Column / Sidebar Area */}
         <div className="rep-right-column">
           
-          {/* Calendar Widget */}
+          {/* Calendar Widget — Navigable */}
           <div className="rep-card">
             <div className="rep-calendar-header">
-              <h3>May 2026</h3>
+              <h3>{MONTH_NAMES[dashCalMonth]} {dashCalYear}</h3>
               <div className="rep-cal-nav">
-                <button><ChevronLeft size={16}/></button>
-                <button><ChevronRight size={16}/></button>
+                <button onClick={dashCalPrev}><ChevronLeft size={16}/></button>
+                <button onClick={dashCalNext}><ChevronRight size={16}/></button>
               </div>
             </div>
             <div className="rep-calendar-grid">
               <div className="day-name">S</div><div className="day-name">M</div><div className="day-name">T</div><div className="day-name">W</div><div className="day-name">T</div><div className="day-name">F</div><div className="day-name">S</div>
-              <div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day prev-month">29</div><div className="day prev-month">30</div><div className="day active-pink">1</div><div className="day">2</div>
-              <div className="day">3</div><div className="day active-cyan">4</div><div className="day">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div>
-              <div className="day">10</div><div className="day">11</div><div className="day">12</div><div className="day">13</div><div className="day">14</div><div className="day">15</div><div className="day">16</div>
-              <div className="day">17</div><div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day active-cyan">22</div><div className="day">23</div>
-              <div className="day">24</div><div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day active-pink">28</div><div className="day">29</div><div className="day">30</div>
-              <div className="day">31</div><div className="day next-month">1</div><div className="day next-month">2</div><div className="day next-month">3</div><div className="day next-month">4</div><div className="day next-month">5</div><div className="day next-month">6</div>
+              {getDashCalDays().map((d, i) => (
+                <div key={i} className={`day ${d.type}`} style={d.isToday ? { fontWeight: 'bold', boxShadow: '0 0 0 2px #06B6D4' } : {}}>{d.day}</div>
+              ))}
             </div>
           </div>
 
-          {/* Events */}
+          {/* Events — from customEvents state */}
           <div className="rep-card">
             <div className="rep-card-header">
-              <h3>Events</h3>
-              <MoreHorizontal size={20} className="text-gray" />
+              <h3>Upcoming Events</h3>
+              <button onClick={() => setActiveTab('Calendar')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F97316', fontSize: '12px', fontWeight: 600 }}>View All &rarr;</button>
             </div>
             <div className="rep-events-list">
-              <div className="rep-event-item">
-                <div className="rep-event-time">
-                  <span className="tag pink-light">May 2</span>
-                  <span className="time-text">09:00 AM - 12:00 PM</span>
+              {customEvents.slice(0, 4).map((evt, idx) => (
+                <div key={evt.id} className="rep-event-item" onClick={() => { setSelectedEvent(evt); setActiveTab('Calendar'); }} style={{ cursor: 'pointer' }}>
+                  <div className="rep-event-time">
+                    <span className={`tag ${idx % 2 === 0 ? 'pink-light' : 'cyan-light'}`}>{MONTH_NAMES[dashCalMonth]?.slice(0,3)} {evt.day}</span>
+                    <span className="time-text">{evt.time}</span>
+                  </div>
+                  <h4>{evt.title}</h4>
+                  <span className="event-audience">{evt.type}</span>
                 </div>
-                <h4>Annual Sport Competition</h4>
-                <span className="event-audience">All Classes</span>
-              </div>
-              <div className="rep-event-item">
-                <div className="rep-event-time">
-                  <span className="tag cyan-light">May 5</span>
-                  <span className="time-text">02:00 PM - 04:00 PM</span>
+              ))}
+              {customEvents.length === 0 && (
+                <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-gray)', fontSize: '13px' }}>
+                  No events yet. Go to Calendar to add events.
                 </div>
-                <h4>Parent-Teacher Meeting</h4>
-                <span className="event-audience">1A, 1B</span>
-              </div>
-              <div className="rep-event-item">
-                <div className="rep-event-time">
-                  <span className="tag pink-light">May 28</span>
-                  <span className="time-text">09:00 AM - 05:00 PM</span>
-                </div>
-                <h4>Annual Science Fair</h4>
-                <span className="event-audience">All Classes</span>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Recent Activity */}
+          {/* Recent Activity — Dynamic */}
           <div className="rep-card rep-activity-card">
             <div className="rep-card-header">
               <h3>Recent Activity</h3>
-              <MoreHorizontal size={20} className="text-gray" />
+              <span style={{ fontSize: '11px', color: 'var(--text-gray)' }}>{activityLog.length} items</span>
             </div>
             <div className="rep-activity-list">
-              <div className="rep-activity-item">
-                <div className="rep-activity-icon blue"><Users size={14}/></div>
-                <div className="rep-activity-content">
-                  <p>New student Alicia Gomez (Class 2B) enrolled by Registrar.</p>
-                  <span>May 7, 2026 - 09:15 AM</span>
+              {activityLog.slice(0, 6).map((act) => (
+                <div key={act.id} className="rep-activity-item">
+                  <div className={`rep-activity-icon ${act.color}`}>
+                    {act.icon === 'users' && <Users size={14}/>}
+                    {act.icon === 'check' && <Check size={14}/>}
+                    {act.icon === 'dollar' && <DollarSign size={14}/>}
+                    {act.icon === 'calendar' && <Calendar size={14}/>}
+                    {act.icon === 'alert' && <AlertCircle size={14}/>}
+                    {act.icon === 'edit' && <Edit size={14}/>}
+                    {act.icon === 'trash' && <Trash2 size={14}/>}
+                    {act.icon === 'award' && <Award size={14}/>}
+                  </div>
+                  <div className="rep-activity-content">
+                    <p>{act.text}</p>
+                    <span>{act.time}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="rep-activity-item">
-                <div className="rep-activity-icon pink"><Check size={14}/></div>
-                <div className="rep-activity-content">
-                  <p>Attendance for Class 1A marked by Teacher John Smith.</p>
-                  <span>May 7, 2026 - 11:30 AM</span>
+              ))}
+              {activityLog.length === 0 && (
+                <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-gray)', fontSize: '13px' }}>
+                  No recent activity.
                 </div>
-              </div>
-              <div className="rep-activity-item">
-                <div className="rep-activity-icon blue"><DollarSign size={14}/></div>
-                <div className="rep-activity-content">
-                  <p>Monthly fee payments verified for Grade 6 students.</p>
-                  <span>May 8, 2026 - 02:45 PM</span>
-                </div>
-              </div>
-              <div className="rep-activity-item">
-                <div className="rep-activity-icon pink"><Calendar size={14}/></div>
-                <div className="rep-activity-content">
-                  <p>Exam timetable for Term 2 updated by Academic Coordinator.</p>
-                  <span>May 9, 2026 - 10:20 AM</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -1216,12 +2288,18 @@ const AdminDashboard = ({ user, onLogout }) => {
   );
 
   const renderStudentDetails = () => {
+    const editInputStyle = {
+      width: '100%', padding: '6px 10px', borderRadius: '6px',
+      border: '1px solid var(--border-color)', background: 'var(--bg-secondary)',
+      color: 'var(--text-dark)', fontSize: '13px', fontFamily: 'inherit', outline: 'none',
+    };
+
     return (
-      <div className="rep-modal-overlay" onClick={() => setSelectedStudent(null)}>
+      <div className="rep-modal-overlay" onClick={() => { setSelectedStudent(null); setIsEditingStudent(false); }}>
         <div className="rep-modal-container" onClick={(e) => e.stopPropagation()}>
           <div className="rep-modal-header">
             <h2>Student Details</h2>
-            <button className="rep-modal-close" onClick={() => setSelectedStudent(null)}>
+            <button className="rep-modal-close" onClick={() => { setSelectedStudent(null); setIsEditingStudent(false); }}>
               <X size={24} />
             </button>
           </div>
@@ -1231,31 +2309,87 @@ const AdminDashboard = ({ user, onLogout }) => {
           {/* Column 1: Profile & Info */}
           <div className="rep-sd-col">
             <div className="rep-card text-center rep-profile-card">
-              <img src={`https://api.dicebear.com/7.x/micah/svg?seed=${selectedStudent?.studentId || 'isabella'}&backgroundColor=transparent`} alt="Isabella Rossi" className="rep-profile-img" />
+              <img src={`https://api.dicebear.com/7.x/micah/svg?seed=${selectedStudent?.studentId || 'isabella'}&backgroundColor=transparent`} alt="Student" className="rep-profile-img" />
               <h2>{selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}` : 'Isabella Rossi'}</h2>
               <div className="rep-profile-tags">
                 <span className="tag-outline">{selectedStudent?.studentId || 'S-2106'}</span>
-                <span className="tag-outline">Class {selectedStudent?.gradeLevel?.replace('Grade ', '') || '8'}C</span>
-                <span className="rep-status-pill cyan">{selectedStudent?.status || 'Active'}</span>
+                <span className="tag-outline">{selectedStudent?.gradeLevel || 'Grade 1'} - {selectedStudent?.section || 'Mabini'}</span>
+                <span className={`rep-status-pill ${selectedStudent?.status === 'Dropped' ? 'pink' : selectedStudent?.status === 'Enrolled' ? 'cyan' : 'cyan'}`}>{selectedStudent?.status || 'Active'}</span>
               </div>
+
+              {/* Edit / Save / Cancel buttons */}
+              {!isEditingStudent ? (
+                <button
+                  style={{
+                    marginTop: '16px', backgroundColor: '#3B82F6', color: 'white', border: 'none',
+                    padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                    display: 'inline-flex', alignItems: 'center', gap: '8px', width: '100%',
+                    justifyContent: 'center', transition: 'background-color 0.2s'
+                  }}
+                  onClick={() => handleEditStudent(selectedStudent)}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  <Edit size={16} /> Edit Student Details
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', width: '100%' }}>
+                  <button
+                    style={{
+                      flex: 1, backgroundColor: '#059669', color: 'white', border: 'none',
+                      padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                      display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center',
+                      opacity: editStudentLoading ? 0.6 : 1
+                    }}
+                    onClick={handleSaveStudent}
+                    disabled={editStudentLoading}
+                  >
+                    <Check size={16} /> {editStudentLoading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    style={{
+                      flex: 1, backgroundColor: '#6B7280', color: 'white', border: 'none',
+                      padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                      display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center'
+                    }}
+                    onClick={() => setIsEditingStudent(false)}
+                  >
+                    <X size={16} /> Cancel
+                  </button>
+                </div>
+              )}
               
+              <button 
+                className="rep-btn-drop-student" 
+                style={{
+                  marginTop: '8px',
+                  backgroundColor: selectedStudent?.status === 'Dropped' ? '#059669' : '#f97316',
+                  color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px',
+                  cursor: 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center',
+                  gap: '8px', width: '100%', justifyContent: 'center', transition: 'background-color 0.2s'
+                }}
+                onClick={() => {
+                  const action = selectedStudent?.status === 'Dropped' ? 'Re-enroll' : 'Drop';
+                  setCustomConfirm({
+                    show: true,
+                    title: `${action} Student`,
+                    message: `Are you sure you want to ${action.toLowerCase()} student ${selectedStudent.firstName} ${selectedStudent.lastName}?`,
+                    onConfirm: () => executeToggleStudentStatus(selectedStudent)
+                  });
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                <UserX size={16} /> {selectedStudent?.status === 'Dropped' ? 'Re-enroll Student' : 'Drop Student'}
+              </button>
+
               <button 
                 className="rep-btn-danger" 
                 style={{
-                  marginTop: '16px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  justifyContent: 'center',
-                  transition: 'background-color 0.2s'
+                  marginTop: '8px', backgroundColor: '#ef4444', color: 'white', border: 'none',
+                  padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                  display: 'inline-flex', alignItems: 'center', gap: '8px', width: '100%',
+                  justifyContent: 'center', transition: 'background-color 0.2s'
                 }}
                 onClick={() => handleDeleteStudent(selectedStudent)}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
@@ -1265,22 +2399,69 @@ const AdminDashboard = ({ user, onLogout }) => {
               </button>
               
               <div className="rep-info-list">
-                <div className="rep-info-item">
-                  <span>Gender</span>
-                  <p>Female</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Date of Birth</span>
-                  <p>May 18, 2022</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Phone Number</span>
-                  <p>+62 812 9988 7766</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Address</span>
-                  <p>14 Via Milano,<br/>Rome, Italy</p>
-                </div>
+                {isEditingStudent ? (
+                  <>
+                    <div className="rep-info-item">
+                      <span>Full Name</span>
+                      <input style={editInputStyle} value={editStudentForm.name || ''} onChange={(e) => setEditStudentForm({...editStudentForm, name: e.target.value})} />
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Gender</span>
+                      <select style={editInputStyle} value={editStudentForm.gender || 'Male'} onChange={(e) => setEditStudentForm({...editStudentForm, gender: e.target.value})}>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+                    <div className="rep-info-item">
+                      <span>LRN</span>
+                      <input style={editInputStyle} value={editStudentForm.lrn || ''} onChange={(e) => setEditStudentForm({...editStudentForm, lrn: e.target.value})} />
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Grade Level</span>
+                      <select style={editInputStyle} value={editStudentForm.gradeLevel || ''} onChange={(e) => setEditStudentForm({...editStudentForm, gradeLevel: e.target.value})}>
+                        <option value="">Select</option>
+                        <option value="Kinder">Kinder</option>
+                        <option value="Grade 1">Grade 1</option>
+                        <option value="Grade 2">Grade 2</option>
+                        <option value="Grade 3">Grade 3</option>
+                        <option value="Grade 4">Grade 4</option>
+                        <option value="Grade 5">Grade 5</option>
+                        <option value="Grade 6">Grade 6</option>
+                      </select>
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Section</span>
+                      <input style={editInputStyle} value={editStudentForm.section || ''} onChange={(e) => setEditStudentForm({...editStudentForm, section: e.target.value})} />
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Address</span>
+                      <input style={editInputStyle} value={editStudentForm.address || ''} onChange={(e) => setEditStudentForm({...editStudentForm, address: e.target.value})} placeholder="e.g. Floridablanca, Pampanga" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="rep-info-item">
+                      <span>Gender</span>
+                      <p>{selectedStudent?.gender || 'N/A'}</p>
+                    </div>
+                    <div className="rep-info-item">
+                      <span>LRN</span>
+                      <p>{selectedStudent?.lrn || 'N/A'}</p>
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Grade Level</span>
+                      <p>{selectedStudent?.gradeLevel || 'N/A'}</p>
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Section</span>
+                      <p>{selectedStudent?.section || 'N/A'}</p>
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Address</span>
+                      <p>{selectedStudent?.address || 'Floridablanca, Pampanga'}</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1290,27 +2471,28 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <MoreHorizontal size={20} className="text-gray" />
               </div>
               <div className="rep-info-list no-border">
-                <div className="rep-info-item">
-                  <span>Father</span>
-                  <div>
-                    <p>Marco {selectedStudent?.lastName || 'Rossi'}</p>
-                    <span>+39 331 222 5566</span>
-                  </div>
-                </div>
-                <div className="rep-info-item">
-                  <span>Mother</span>
-                  <div>
-                    <p>Elena {selectedStudent?.lastName || 'Rossi'}</p>
-                    <span>+39 331 444 7788</span>
-                  </div>
-                </div>
-                <div className="rep-info-item">
-                  <span>Alternative Guardian</span>
-                  <div>
-                    <p>Lucia Bianchi (Aunt)</p>
-                    <span>+39 331 555 6677</span>
-                  </div>
-                </div>
+                {isEditingStudent ? (
+                  <>
+                    <div className="rep-info-item">
+                      <span>Parent Name</span>
+                      <input style={editInputStyle} value={editStudentForm.parentName || ''} onChange={(e) => setEditStudentForm({...editStudentForm, parentName: e.target.value})} placeholder="e.g. Marco Dela Cruz" />
+                    </div>
+                    <div className="rep-info-item">
+                      <span>Phone</span>
+                      <input style={editInputStyle} value={editStudentForm.parentPhone || ''} onChange={(e) => setEditStudentForm({...editStudentForm, parentPhone: e.target.value})} placeholder="e.g. +63 912 345 6789" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="rep-info-item">
+                      <span>Parent/Guardian</span>
+                      <div>
+                        <p>{selectedStudent?.parentName || `Parent of ${selectedStudent?.firstName || 'Student'}`}</p>
+                        <span>{selectedStudent?.parentPhone || 'No phone on file'}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1489,11 +2671,11 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <tr>
                     <td>
                       <div className="club-cell">
-                        <div className="club-icon blue-bg">🤖</div>
-                        <div><p>Robotics</p><span>Programmer</span></div>
+                        <div className="club-icon blue-bg">💻</div>
+                        <div><p>Coding Club</p><span>Scratch Developer</span></div>
                       </div>
                     </td>
-                    <td>1st Place in School Robotics Fair</td>
+                    <td>1st Place in School Science Fair</td>
                     <td>2033 - Present</td>
                     <td>Mr. Daniel K.</td>
                   </tr>
@@ -1645,6 +2827,13 @@ const AdminDashboard = ({ user, onLogout }) => {
       }
     });
 
+    // Apply status overrides for mock students
+    allStudents.forEach(st => {
+      if (studentStatusOverrides[st.studentId]) {
+        st.status = studentStatusOverrides[st.studentId];
+      }
+    });
+
     // Apply search query and status filter
     const filteredStudents = allStudents.filter(st => {
       if (deletedStudentIds.includes(st.studentId)) return false;
@@ -1784,6 +2973,8 @@ const AdminDashboard = ({ user, onLogout }) => {
                     >
                       <option value="All" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>All Status</option>
                       <option value="Active" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Active</option>
+                      <option value="Enrolled" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Enrolled</option>
+                      <option value="Dropped" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Dropped</option>
                       <option value="On Leave" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>On Leave</option>
                     </select>
                     <ChevronDown size={14} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -1830,7 +3021,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                         </td>
                         <td>{att}</td>
                         <td>
-                          <span className={`rep-status-pill ${stat === 'Active' ? 'cyan' : 'blue'}`}>{stat}</span>
+                          <span className={`rep-status-pill ${stat === 'Dropped' ? 'pink' : stat === 'Enrolled' ? 'cyan' : stat === 'Active' ? 'cyan' : 'blue'}`}>{stat}</span>
                         </td>
                       </tr>
                     )})}
@@ -1883,15 +3074,22 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <AreaChart data={enrollmentTrendsData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1E3A8A" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="#1E3A8A" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                         </linearGradient>
+                        <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} tickFormatter={(val) => val === 0 ? '0' : `${(val/1000).toFixed(1)}K`} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="value" stroke="#1E3A8A" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
+                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} tickFormatter={(val) => val === 0 ? '0' : `${(val/1000).toFixed(1)}K`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" filter="url(#chartGlow)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1909,10 +3107,16 @@ const AdminDashboard = ({ user, onLogout }) => {
                 {isChartReady ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dynamicAttendanceData()} margin={{ top: 25, right: 0, left: 0, bottom: 0 }} barSize={30}>
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748B'}} />
-                      <Tooltip cursor={{fill: 'transparent'}} />
-                      <Bar dataKey="present" fill="#F472B6" radius={[4, 4, 0, 0]} background={{ fill: '#F1F5F9', radius: [4, 4, 0, 0] }} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
-                        <LabelList dataKey="present" position="top" fill="#64748B" fontSize={11} fontWeight={500} formatter={(v) => v.toLocaleString()} />
+                      <defs>
+                        <linearGradient id="attendanceGrad2" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#F472B6" stopOpacity={0.95}/>
+                          <stop offset="100%" stopColor="#EC4899" stopOpacity={0.25}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: 'var(--text-gray)'}} />
+                      <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
+                      <Bar dataKey="present" fill="url(#attendanceGrad2)" radius={[6, 6, 0, 0]} background={{ fill: 'var(--chart-bg-track)', radius: [6, 6, 0, 0] }} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
+                        <LabelList dataKey="present" position="top" fill="var(--text-gray)" fontSize={10} fontWeight={500} formatter={(v) => v.toLocaleString()} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -2054,11 +3258,11 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
 
     const departmentColors = {
-      'Science': '#1E3A8A',
-      'Mathematics': '#06B6D4',
-      'English': '#FB7185',
-      'Arts': '#F472B6',
-      'Physical Ed': '#F1F5F9'
+      'Science': '#3B82F6',
+      'Mathematics': '#10B981',
+      'English': '#EC4899',
+      'Arts': '#8B5CF6',
+      'Physical Ed': '#F59E0B'
     };
 
     const departmentData = Object.keys(deptCounts).map(dept => ({
@@ -2207,9 +3411,10 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <>
                     <ResponsiveContainer width="100%" height={160}>
                       <PieChart>
-                        <Pie data={departmentData} innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value" stroke="none" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
+                        <Pie data={departmentData} innerRadius={40} outerRadius={70} paddingAngle={2} cornerRadius={4} dataKey="value" stroke="var(--bg-panel)" strokeWidth={3} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out">
                           {departmentData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                         </Pie>
+                        <Tooltip content={<CustomTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="rep-donut-center">
@@ -2246,11 +3451,20 @@ const AdminDashboard = ({ user, onLogout }) => {
                 {isChartReady ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={attendanceData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="present" stroke="#1E3A8A" strokeWidth={3} dot={{r: 4, fill: '#1E3A8A', strokeWidth: 2, stroke: '#fff'}} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <defs>
+                        <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line type="monotone" dataKey="present" stroke="#3B82F6" strokeWidth={3} filter="url(#chartGlow)" dot={{r: 4, fill: '#3B82F6', strokeWidth: 2, stroke: 'var(--bg-panel)'}} activeDot={{ r: 6, strokeWidth: 0 }} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -2273,13 +3487,27 @@ const AdminDashboard = ({ user, onLogout }) => {
                 {isChartReady ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={workloadData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }} barSize={12}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <Tooltip cursor={{fill: 'transparent'}} />
-                      <Bar dataKey="classes" stackId="a" fill="#1E3A8A" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
-                      <Bar dataKey="hours" stackId="a" fill="#06B6D4" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
-                      <Bar dataKey="extra" stackId="a" fill="#FB7185" radius={[4, 4, 0, 0]} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <defs>
+                        <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95}/>
+                          <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.25}/>
+                        </linearGradient>
+                        <linearGradient id="gradTeal" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.95}/>
+                          <stop offset="100%" stopColor="#0891B2" stopOpacity={0.25}/>
+                        </linearGradient>
+                        <linearGradient id="gradRose" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.95}/>
+                          <stop offset="100%" stopColor="#BE123C" stopOpacity={0.25}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.03)'}} />
+                      <Bar dataKey="classes" stackId="a" fill="url(#gradBlue)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <Bar dataKey="hours" stackId="a" fill="url(#gradTeal)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <Bar dataKey="extra" stackId="a" fill="url(#gradRose)" radius={[4, 4, 0, 0]} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -2306,11 +3534,11 @@ const AdminDashboard = ({ user, onLogout }) => {
     ];
 
     return (
-      <div className="rep-modal-overlay" onClick={() => setSelectedTeacher(null)}>
+      <div className="rep-modal-overlay" onClick={() => { setSelectedTeacher(null); setIsEditingTeacher(false); }}>
         <div className="rep-modal-container" onClick={(e) => e.stopPropagation()}>
           <div className="rep-modal-header">
             <h2>Teacher Details</h2>
-            <button className="rep-modal-close" onClick={() => setSelectedTeacher(null)}>
+            <button className="rep-modal-close" onClick={() => { setSelectedTeacher(null); setIsEditingTeacher(false); }}>
               <X size={24} />
             </button>
           </div>
@@ -2324,26 +3552,58 @@ const AdminDashboard = ({ user, onLogout }) => {
               <h2>{selectedTeacher?.name || 'Cliff Villiam'}</h2>
               <div className="rep-profile-tags">
                 <span className="tag-outline">{selectedTeacher?.id || 'T-1003'}</span>
-                <span className="rep-status-pill blue">Full-Time</span>
+                <span className="rep-status-pill blue">{selectedTeacher?.type || 'Full-Time'}</span>
               </div>
+
+              {/* Edit / Save / Cancel buttons */}
+              {!isEditingTeacher ? (
+                <button
+                  style={{
+                    marginTop: '16px', backgroundColor: '#3B82F6', color: 'white', border: 'none',
+                    padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                    display: 'inline-flex', alignItems: 'center', gap: '8px', width: '100%',
+                    justifyContent: 'center', transition: 'background-color 0.2s'
+                  }}
+                  onClick={() => handleEditTeacher(selectedTeacher)}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  <Edit size={16} /> Edit Teacher Details
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', width: '100%' }}>
+                  <button
+                    style={{
+                      flex: 1, backgroundColor: '#059669', color: 'white', border: 'none',
+                      padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                      display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center',
+                      opacity: editTeacherLoading ? 0.6 : 1
+                    }}
+                    onClick={handleSaveTeacher}
+                    disabled={editTeacherLoading}
+                  >
+                    <Check size={16} /> {editTeacherLoading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    style={{
+                      flex: 1, backgroundColor: '#6B7280', color: 'white', border: 'none',
+                      padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                      display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center'
+                    }}
+                    onClick={() => setIsEditingTeacher(false)}
+                  >
+                    <X size={16} /> Cancel
+                  </button>
+                </div>
+              )}
 
               <button 
                 className="rep-btn-danger" 
                 style={{
-                  marginTop: '16px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  justifyContent: 'center',
-                  transition: 'background-color 0.2s'
+                  marginTop: '8px', backgroundColor: '#ef4444', color: 'white', border: 'none',
+                  padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
+                  display: 'inline-flex', alignItems: 'center', gap: '8px', width: '100%',
+                  justifyContent: 'center', transition: 'background-color 0.2s'
                 }}
                 onClick={() => handleDeleteTeacher(selectedTeacher)}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
@@ -2352,43 +3612,105 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <Trash2 size={16} /> Remove Teacher completely
               </button>
               
-              <div className="rep-info-list" style={{borderBottom: '1px solid var(--border-color)', paddingBottom: '16px'}}>
-                <div className="rep-info-item">
-                  <span>Subject</span>
-                  <p>{selectedTeacher?.subject || 'English Language'}</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Class</span>
-                  <p>8C - 9A - 9B</p>
-                </div>
-              </div>
+              {(() => {
+                const teachEditStyle = {
+                  width: '100%', padding: '6px 10px', borderRadius: '6px',
+                  border: '1px solid var(--border-color)', background: 'var(--bg-secondary)',
+                  color: 'var(--text-dark)', fontSize: '13px', fontFamily: 'inherit', outline: 'none',
+                };
+                return (
+                  <>
+                    <div className="rep-info-list" style={{borderBottom: '1px solid var(--border-color)', paddingBottom: '16px'}}>
+                      {isEditingTeacher ? (
+                        <>
+                          <div className="rep-info-item">
+                            <span>Full Name</span>
+                            <input style={teachEditStyle} value={editTeacherForm.name || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, name: e.target.value})} />
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Subject</span>
+                            <input style={teachEditStyle} value={editTeacherForm.subject || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, subject: e.target.value})} />
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Grade Level</span>
+                            <select style={teachEditStyle} value={editTeacherForm.gradeLevel || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, gradeLevel: e.target.value})}>
+                              <option value="">Select</option>
+                              <option value="Kinder">Kinder</option>
+                              <option value="Grade 1">Grade 1</option>
+                              <option value="Grade 2">Grade 2</option>
+                              <option value="Grade 3">Grade 3</option>
+                              <option value="Grade 4">Grade 4</option>
+                              <option value="Grade 5">Grade 5</option>
+                              <option value="Grade 6">Grade 6</option>
+                            </select>
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Section</span>
+                            <input style={teachEditStyle} value={editTeacherForm.section || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, section: e.target.value})} />
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Type</span>
+                            <select style={teachEditStyle} value={editTeacherForm.type || 'Full-Time'} onChange={(e) => setEditTeacherForm({...editTeacherForm, type: e.target.value})}>
+                              <option value="Full-Time">Full-Time</option>
+                              <option value="Part-Time">Part-Time</option>
+                              <option value="Substitute">Substitute</option>
+                            </select>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="rep-info-item">
+                            <span>Subject</span>
+                            <p>{selectedTeacher?.subject || 'General Education'}</p>
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Class</span>
+                            <p>{selectedTeacher?.gradeLevel ? `${selectedTeacher.gradeLevel} - ${selectedTeacher.section || 'N/A'}` : 'N/A'}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
 
-              <div className="rep-card-header" style={{marginTop: '24px', marginBottom: '8px', width: '100%'}}>
-                <h3 style={{fontSize: '14px', color: 'var(--text-dark)'}}>Personal Info</h3>
-                <MoreHorizontal size={16} className="text-gray" />
-              </div>
-              <div className="rep-info-list no-border">
-                <div className="rep-info-item">
-                  <span>Gender</span>
-                  <p>Male</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Date of Birth</span>
-                  <p>April 15, 1990</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Email Address</span>
-                  <p>{selectedTeacher?.email || 'cliff.villiam@studixschool.org'}</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Phone Number</span>
-                  <p>{selectedTeacher?.phone || '+62 811 5567 2345'}</p>
-                </div>
-                <div className="rep-info-item">
-                  <span>Address</span>
-                  <p>{selectedTeacher?.address || '221B Baker Street, London, UK'}</p>
-                </div>
-              </div>
+                    <div className="rep-card-header" style={{marginTop: '24px', marginBottom: '8px', width: '100%'}}>
+                      <h3 style={{fontSize: '14px', color: 'var(--text-dark)'}}>Personal Info</h3>
+                      <MoreHorizontal size={16} className="text-gray" />
+                    </div>
+                    <div className="rep-info-list no-border">
+                      {isEditingTeacher ? (
+                        <>
+                          <div className="rep-info-item">
+                            <span>Email Address</span>
+                            <input style={teachEditStyle} value={editTeacherForm.email || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, email: e.target.value})} />
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Phone Number</span>
+                            <input style={teachEditStyle} value={editTeacherForm.phone || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, phone: e.target.value})} />
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Address</span>
+                            <input style={teachEditStyle} value={editTeacherForm.address || ''} onChange={(e) => setEditTeacherForm({...editTeacherForm, address: e.target.value})} />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="rep-info-item">
+                            <span>Email Address</span>
+                            <p>{selectedTeacher?.email || 'N/A'}</p>
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Phone Number</span>
+                            <p>{selectedTeacher?.phone || 'N/A'}</p>
+                          </div>
+                          <div className="rep-info-item">
+                            <span>Address</span>
+                            <p>{selectedTeacher?.address || 'Valdez Elementary School, PH'}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="rep-card">
@@ -2439,25 +3761,34 @@ const AdminDashboard = ({ user, onLogout }) => {
                 {isChartReady ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={workloadArea} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748B'}} />
-                      <Tooltip content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div style={{ background: 'white', padding: '12px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-color)' }}>
-                              <strong style={{marginBottom: '4px'}}>{label} 2034</strong>
-                              <div style={{display: 'flex', justifyContent: 'space-between', gap: '20px', color: 'var(--text-gray)'}}><span><span className="dot blue" style={{display:'inline-block'}}></span> Total Classes</span> <strong style={{color: 'var(--text-dark)'}}>{payload[0].value} Hours</strong></div>
-                              <div style={{display: 'flex', justifyContent: 'space-between', gap: '20px', color: 'var(--text-gray)'}}><span><span className="dot cyan" style={{display:'inline-block'}}></span> Teaching Hours</span> <strong style={{color: 'var(--text-dark)'}}>{payload[1].value} Hours</strong></div>
-                              <div style={{display: 'flex', justifyContent: 'space-between', gap: '20px', color: 'var(--text-gray)'}}><span><span className="dot pink" style={{display:'inline-block'}}></span> Extra Duties</span> <strong style={{color: 'var(--text-dark)'}}>{payload[2].value} Hours</strong></div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }} />
-                      <Area type="monotone" dataKey="classes" stackId="1" stroke="#1E3A8A" fill="#1E3A8A" fillOpacity={1} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
-                      <Area type="monotone" dataKey="hours" stackId="1" stroke="#06B6D4" fill="#06B6D4" fillOpacity={1} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
-                      <Area type="monotone" dataKey="extra" stackId="1" stroke="#FB7185" fill="#FB7185" fillOpacity={1} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <defs>
+                        <linearGradient id="workloadClasses" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.5}/>
+                          <stop offset="100%" stopColor="#3B82F6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="workloadHours" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.5}/>
+                          <stop offset="100%" stopColor="#06B6D4" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="workloadExtra" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.5}/>
+                          <stop offset="100%" stopColor="#F43F5E" stopOpacity={0}/>
+                        </linearGradient>
+                        <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid-color)" opacity={0.3} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: 'var(--text-gray)'}} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="classes" stackId="1" stroke="#3B82F6" fill="url(#workloadClasses)" filter="url(#chartGlow)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <Area type="monotone" dataKey="hours" stackId="1" stroke="#06B6D4" fill="url(#workloadHours)" filter="url(#chartGlow)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                      <Area type="monotone" dataKey="extra" stackId="1" stroke="#F43F5E" fill="url(#workloadExtra)" filter="url(#chartGlow)" isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
@@ -2679,6 +4010,287 @@ const AdminDashboard = ({ user, onLogout }) => {
     );
   };
 
+  // ─── Accounts Management Tab ───
+  const renderAccounts = () => {
+    const allUsers = data?.users || [];
+
+    const filteredAccounts = allUsers.filter(u => {
+      const nameMatch = (u.name || '').toLowerCase().includes(accountSearch.toLowerCase());
+      const usernameMatch = (u.username || '').toLowerCase().includes(accountSearch.toLowerCase());
+      const idMatch = (u.id || '').toLowerCase().includes(accountSearch.toLowerCase());
+      const searchMatch = accountSearch === '' || nameMatch || usernameMatch || idMatch;
+      const roleMatch = accountRoleFilter === 'All' || u.role === accountRoleFilter;
+      return searchMatch && roleMatch;
+    });
+
+    const accountsPerPage = 12;
+    const totalAccountPages = Math.ceil(filteredAccounts.length / accountsPerPage) || 1;
+    const currentAccountPage = Math.min(accountPage, totalAccountPages);
+    const paginatedAccounts = filteredAccounts.slice(
+      (currentAccountPage - 1) * accountsPerPage,
+      currentAccountPage * accountsPerPage
+    );
+
+    const roleCounts = {
+      total: allUsers.length,
+      admins: allUsers.filter(u => u.role === 'Admin').length,
+      teachers: allUsers.filter(u => u.role === 'Teacher').length,
+      students: allUsers.filter(u => u.role === 'Student').length,
+    };
+
+    const getRoleBadge = (role) => {
+      switch(role) {
+        case 'Admin': return 'blue';
+        case 'Teacher': return 'cyan';
+        case 'Student': return 'pink';
+        default: return 'gray';
+      }
+    };
+
+    return (
+      <div className="rep-content-scroll">
+        <div className="rep-content-grid-students">
+          <div className="rep-students-main-column" style={{ gridColumn: '1 / -1' }}>
+            
+            {/* Stats Row */}
+            <div className="rep-students-top-row">
+              <div className="rep-students-stats-grid">
+                <div className="rep-student-stat-box large">
+                  <div className="rep-stat-info">
+                    <span className="rep-stat-value text-cyan">{roleCounts.total}</span>
+                    <span className="rep-stat-label">Total Accounts</span>
+                  </div>
+                  <div className="rep-stat-icon pink">
+                    <Shield size={24} />
+                  </div>
+                </div>
+                <div className="rep-student-stat-box">
+                  <div className="rep-stat-info">
+                    <span className="rep-stat-value">{roleCounts.admins}</span>
+                    <span className="rep-stat-label">Admin Accounts</span>
+                  </div>
+                  <div className="rep-stat-icon-circle blue">
+                    <span>A</span>
+                  </div>
+                </div>
+                <div className="rep-student-stat-box">
+                  <div className="rep-stat-info">
+                    <span className="rep-stat-value">{roleCounts.teachers}</span>
+                    <span className="rep-stat-label">Teacher Accounts</span>
+                  </div>
+                  <div className="rep-stat-icon-circle cyan">
+                    <span>T</span>
+                  </div>
+                </div>
+                <div className="rep-student-stat-box">
+                  <div className="rep-stat-info">
+                    <span className="rep-stat-value">{roleCounts.students}</span>
+                    <span className="rep-stat-label">Student Accounts</span>
+                  </div>
+                  <div className="rep-stat-icon-circle pink">
+                    <span>S</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Accounts Table */}
+            <div className="rep-card rep-students-table-card">
+              <div className="rep-card-header" style={{ marginBottom: '16px' }}>
+                <h3>User Accounts & Credentials</h3>
+                <div className="rep-table-actions">
+                  <div className="rep-search-box-small">
+                    <Search size={14} className="rep-search-icon" />
+                    <input 
+                      type="text" 
+                      placeholder="Search accounts" 
+                      value={accountSearch}
+                      onChange={(e) => { setAccountSearch(e.target.value); setAccountPage(1); }}
+                    />
+                  </div>
+                  <div className="rep-dropdown" style={{ position: 'relative' }}>
+                    <select
+                      value={accountRoleFilter}
+                      onChange={(e) => { setAccountRoleFilter(e.target.value); setAccountPage(1); }}
+                      style={{
+                        background: 'transparent', border: 'none', color: 'inherit',
+                        fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit',
+                        outline: 'none', cursor: 'pointer', paddingRight: '16px',
+                        appearance: 'none', WebkitAppearance: 'none'
+                      }}
+                    >
+                      <option value="All" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>All Roles</option>
+                      <option value="Admin" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Admin</option>
+                      <option value="Teacher" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Teacher</option>
+                      <option value="Student" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Student</option>
+                    </select>
+                    <ChevronDown size={14} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="rep-table-responsive">
+                <table className="rep-table">
+                  <thead>
+                    <tr>
+                      <th>User <ChevronDown size={12}/></th>
+                      <th>Role <ChevronDown size={12}/></th>
+                      <th>Username <ChevronDown size={12}/></th>
+                      <th>Password <ChevronDown size={12}/></th>
+                      <th>Grade / Section <ChevronDown size={12}/></th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedAccounts.map((u, i) => (
+                      <tr key={u.id || i}>
+                        <td>
+                          <div className="rep-table-user">
+                            <img src={`https://api.dicebear.com/7.x/${u.role === 'Student' ? 'micah' : 'avataaars'}/svg?seed=${u.name || u.id}&backgroundColor=${u.role === 'Admin' ? 'c0aede' : u.role === 'Teacher' ? 'b6e3f4' : 'transparent'}`} alt="avatar" style={u.role !== 'Student' ? { borderRadius: '50%' } : {}} />
+                            <div>
+                              <p>{u.name}</p>
+                              <span>{u.id}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`rep-status-pill ${getRoleBadge(u.role)}`}>{u.role}</span>
+                        </td>
+                        <td style={{ fontFamily: 'monospace', fontSize: '13px' }}>
+                          {editingAccountId === u.id ? (
+                            <input 
+                              type="text" 
+                              value={editAccountForm.username} 
+                              onChange={(e) => setEditAccountForm({ ...editAccountForm, username: e.target.value })}
+                              style={{
+                                padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-color)',
+                                background: 'var(--bg-secondary)', color: 'var(--text-dark)', fontSize: '13px',
+                                width: '130px', fontFamily: 'monospace', outline: 'none'
+                              }}
+                            />
+                          ) : (
+                            u.username
+                          )}
+                        </td>
+                        <td style={{ fontFamily: 'monospace', fontSize: '13px' }}>
+                          {editingAccountId === u.id ? (
+                            <input 
+                              type="text" 
+                              placeholder="New password" 
+                              value={editAccountForm.password} 
+                              onChange={(e) => setEditAccountForm({ ...editAccountForm, password: e.target.value })}
+                              style={{
+                                padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-color)',
+                                background: 'var(--bg-secondary)', color: 'var(--text-dark)', fontSize: '13px',
+                                width: '130px', fontFamily: 'monospace', outline: 'none'
+                              }}
+                            />
+                          ) : (
+                            <span style={{ color: 'var(--text-gray)' }}>{'•'.repeat(Math.min((u.password || '').length, 8))}</span>
+                          )}
+                        </td>
+                        <td>{u.gradeLevel ? `${u.gradeLevel} - ${u.section || 'N/A'}` : '—'}</td>
+                        <td>
+                          {editingAccountId === u.id ? (
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button 
+                                className="rep-icon-btn-small" 
+                                title="Save Credentials"
+                                style={{ backgroundColor: '#10B981', color: 'white', border: 'none' }}
+                                onClick={() => handleSaveAccountCredentials(u.id)}
+                                disabled={editAccountLoading}
+                              >
+                                <Check size={14} />
+                              </button>
+                              <button 
+                                className="rep-icon-btn-small" 
+                                title="Cancel"
+                                style={{ backgroundColor: '#6B7280', color: 'white', border: 'none' }}
+                                onClick={() => setEditingAccountId(null)}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button 
+                                className="rep-icon-btn-small" 
+                                title="Change Username/Password"
+                                onClick={() => {
+                                  setEditingAccountId(u.id);
+                                  setEditAccountForm({ username: u.username || '', password: '' });
+                                }}
+                              >
+                                <Key size={14} />
+                              </button>
+                              {u.role === 'Teacher' && (
+                                <button 
+                                  className="rep-icon-btn-small" 
+                                  title="View Teacher"
+                                  onClick={() => {
+                                    const teacherData = {
+                                      id: u.id, name: u.name, subject: u.subject || 'General Education',
+                                      gradeLevel: u.gradeLevel, section: u.section,
+                                      phone: u.phone || '', email: u.email || `${u.username}@studixschool.org`,
+                                      address: u.address || 'Valdez Elementary School, PH',
+                                      type: u.type || 'Full-Time', isDb: true
+                                    };
+                                    setSelectedTeacher(teacherData);
+                                    setActiveTab('Teachers');
+                                  }}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              )}
+                              {u.role === 'Student' && (
+                                <button 
+                                  className="rep-icon-btn-small" 
+                                  title="View Student"
+                                  onClick={() => {
+                                    const student = data?.students?.find(s => s.id + '_login' === u.id || s.id === u.id.replace('_login', ''));
+                                    if (student) {
+                                      const nameParts = (student.name || '').split(' ');
+                                      setSelectedStudent({
+                                        studentId: student.id, firstName: nameParts[0] || '', lastName: nameParts.slice(1).join(' ') || '',
+                                        gradeLevel: student.gradeLevel, section: student.section, status: student.status || 'Active',
+                                        gpa: student.gpa || '3.5', attendance: student.attendanceRate || '95%',
+                                        parentName: student.parentName, parentPhone: student.parentPhone,
+                                        address: student.address, gender: student.gender, lrn: student.lrn, isDb: true
+                                      });
+                                      setActiveTab('Students');
+                                    }
+                                  }}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination */}
+              <div className="rep-pagination">
+                <span>Showing {filteredAccounts.length > 0 ? ((currentAccountPage - 1) * accountsPerPage + 1) : 0}-{Math.min(currentAccountPage * accountsPerPage, filteredAccounts.length)} of {filteredAccounts.length} accounts</span>
+                <div className="rep-pagination-btns">
+                  <button disabled={currentAccountPage <= 1} onClick={() => setAccountPage(prev => Math.max(1, prev - 1))}><ChevronLeft size={16}/></button>
+                  {Array.from({ length: Math.min(totalAccountPages, 5) }).map((_, i) => (
+                    <button key={i} className={currentAccountPage === i + 1 ? 'active' : ''} onClick={() => setAccountPage(i + 1)}>{i + 1}</button>
+                  ))}
+                  <button disabled={currentAccountPage >= totalAccountPages} onClick={() => setAccountPage(prev => Math.min(totalAccountPages, prev + 1))}><ChevronRight size={16}/></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderCalendar = () => {
     return (
       <div className="rep-content-scroll">
@@ -2772,16 +4384,16 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                   </div>
                   <div className="rep-big-cal-grid">
-                    <div className="rep-big-cal-day prev-month"><span className="day-number" style={{color: 'var(--text-light)'}}>25</span></div>
-                    <div className="rep-big-cal-day prev-month"><span className="day-number" style={{color: 'var(--text-light)'}}>26</span></div>
-                    <div className="rep-big-cal-day prev-month"><span className="day-number" style={{color: 'var(--text-light)'}}>27</span></div>
-                    <div className="rep-big-cal-day prev-month"><span className="day-number" style={{color: 'var(--text-light)'}}>28</span></div>
-                    {Array.from({length: 31}).map((_, i) => {
-                      const day = i + 1;
-                      const dayEvents = customEvents.filter(e => e.day === day);
+                    {getCalendarDays().map((dObj, idx) => {
+                      const day = dObj.day;
+                      const isCurrent = dObj.isCurrentMonth;
+                      const dayEvents = isCurrent ? customEvents.filter(e => e.day === day) : [];
                       return (
-                        <div key={day} className="rep-big-cal-day">
-                          <span className="day-number">{day}</span>
+                        <div 
+                          key={idx} 
+                          className={`rep-big-cal-day ${!isCurrent ? 'prev-month' : ''} ${dObj.isToday ? 'active-cyan' : ''}`}
+                        >
+                          <span className="day-number" style={!isCurrent ? {color: 'var(--text-light)'} : {}}>{day}</span>
                           {dayEvents.map(ev => (
                             <div key={ev.id} className={`rep-cal-event ${ev.type === 'academic' ? 'blue' : ev.type === 'sports' ? 'pink' : ev.type === 'holiday' ? 'cyan' : 'yellow'}`} onClick={() => setSelectedEvent(ev)} style={{cursor: 'pointer'}}>
                               <span>{ev.time}</span>
@@ -2858,17 +4470,24 @@ const AdminDashboard = ({ user, onLogout }) => {
               <div className="rep-calendar-header">
                 <h3>{calendarMonth} {calendarYear}</h3>
                 <div className="rep-cal-nav">
-                  <button><ChevronLeft size={16}/></button>
-                  <button><ChevronRight size={16}/></button>
+                  <button onClick={calPrev}><ChevronLeft size={16}/></button>
+                  <button onClick={calNext}><ChevronRight size={16}/></button>
                 </div>
               </div>
               <div className="rep-calendar-grid">
                 <div className="day-name">S</div><div className="day-name">M</div><div className="day-name">T</div><div className="day-name">W</div><div className="day-name">T</div><div className="day-name">F</div><div className="day-name">S</div>
-                <div className="day prev-month">25</div><div className="day prev-month">26</div><div className="day prev-month">27</div><div className="day prev-month">28</div><div className="day">1</div><div className="day active-pink">2</div><div className="day">3</div>
-                <div className="day">4</div><div className="day active-cyan">5</div><div className="day">6</div><div className="day">7</div><div className="day">8</div><div className="day">9</div><div className="day">10</div>
-                <div className="day">11</div><div className="day">12</div><div className="day">13</div><div className="day">14</div><div className="day">15</div><div className="day">16</div><div className="day">17</div>
-                <div className="day">18</div><div className="day">19</div><div className="day">20</div><div className="day">21</div><div className="day">22</div><div className="day">23</div><div className="day">24</div>
-                <div className="day">25</div><div className="day">26</div><div className="day">27</div><div className="day active-pink">28</div><div className="day">29</div><div className="day">30</div><div className="day">31</div>
+                {getCalendarDays().map((dObj, idx) => {
+                  const day = dObj.day;
+                  const isCurrent = dObj.isCurrentMonth;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`day ${!isCurrent ? 'prev-month' : ''} ${dObj.type ? dObj.type : ''}`}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -2878,22 +4497,37 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <h3>Upcoming Event</h3>
                 <MoreHorizontal size={20} className="text-gray" />
               </div>
-              <div className="rep-upcoming-event-card">
-                <div className="event-date-box pink">
-                  <span>18</span>
-                  <small>Mar</small>
-                </div>
-                <div className="event-details">
-                  <h4>Teacher's Training</h4>
-                  <p>02:00 PM - 04:00 PM</p>
-                  <div className="event-users">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=T1&backgroundColor=b6e3f4" alt="u1" style={{ borderRadius: '50%' }} />
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=T2&backgroundColor=ffdfbf" alt="u2" style={{ borderRadius: '50%' }} />
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=T3&backgroundColor=c0aede" alt="u3" style={{ borderRadius: '50%' }} />
-                    <span className="more-users">+5</span>
+              {(() => {
+                const upcomingEvent = customEvents && customEvents.length > 0
+                  ? [...customEvents].sort((a, b) => a.day - b.day)[0]
+                  : null;
+                if (!upcomingEvent) {
+                  return (
+                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-gray)', fontSize: '14px' }}>
+                      No upcoming events scheduled.
+                    </div>
+                  );
+                }
+                const boxColorClass = upcomingEvent.type === 'academic' ? 'blue' : upcomingEvent.type === 'sports' ? 'pink' : upcomingEvent.type === 'holiday' ? 'cyan' : 'yellow';
+                return (
+                  <div className="rep-upcoming-event-card" onClick={() => setSelectedEvent(upcomingEvent)} style={{ cursor: 'pointer' }}>
+                    <div className={`event-date-box ${boxColorClass}`}>
+                      <span>{upcomingEvent.day}</span>
+                      <small>{calendarMonth.substring(0, 3)}</small>
+                    </div>
+                    <div className="event-details">
+                      <h4>{upcomingEvent.title}</h4>
+                      <p>{upcomingEvent.time}</p>
+                      <div className="event-users">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=T1&backgroundColor=b6e3f4" alt="u1" style={{ borderRadius: '50%' }} />
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=T2&backgroundColor=ffdfbf" alt="u2" style={{ borderRadius: '50%' }} />
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=T3&backgroundColor=c0aede" alt="u3" style={{ borderRadius: '50%' }} />
+                        <span className="more-users">+5</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
           </div>
@@ -2941,6 +4575,11 @@ const AdminDashboard = ({ user, onLogout }) => {
             <BarChart2 size={20} />
             <span>Analytics</span>
           </a>
+
+          <a href="#" className={`rep-nav-item ${activeTab === 'Accounts' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('Accounts'); setIsSidebarOpen(false); }}>
+            <Shield size={20} />
+            <span>Accounts</span>
+          </a>
         </nav>
 
         <button className="rep-logout" onClick={() => { setIsSidebarOpen(false); onLogout(); }}>
@@ -2976,7 +4615,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           ) : (
             <div className="rep-header-title-area">
               <h1 className="rep-page-title">{activeTab}</h1>
-              {(activeTab === 'Students' || activeTab === 'Teachers') && (
+              {(activeTab === 'Students' || activeTab === 'Teachers' || activeTab === 'Accounts') && (
                 <div className="rep-page-breadcrumbs">
                   <span>Dashboard</span> / {activeTab}
                 </div>
@@ -3018,21 +4657,14 @@ const AdminDashboard = ({ user, onLogout }) => {
               </>
             )}
 
-            <div className="rep-search-box">
-              <Search size={18} className="rep-search-icon" />
-              <input type="text" placeholder="Search anything" />
-            </div>
-            
-            <button className="rep-icon-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            <button className="rep-icon-btn" onClick={() => setShowSettingsModal(true)}>
+              <Settings size={20} />
             </button>
-            <button className="rep-icon-btn"><Settings size={20} /></button>
-            <button className="rep-icon-btn"><Bell size={20} /></button>
             
             <div className="rep-user-profile">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Suzette+Paguio&backgroundColor=b6e3f4" alt="SUZETTE D. PAGUIO" className="rep-avatar" style={{ borderRadius: '50%' }} />
+              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(adminName)}&backgroundColor=b6e3f4`} alt={adminName} className="rep-avatar" style={{ borderRadius: '50%' }} />
               <div className="rep-user-info">
-                <span className="rep-user-name">SUZETTE D. PAGUIO</span>
+                <span className="rep-user-name">{adminName}</span>
                 <span className="rep-user-role">Admin</span>
               </div>
             </div>
@@ -3056,6 +4688,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             </>
           )}
           {activeTab === 'Calendar' && renderCalendar()}
+          {activeTab === 'Accounts' && renderAccounts()}
         </div>
       </div>
 
@@ -3087,8 +4720,8 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <p>The new student has been enrolled and their login credentials have been created.</p>
                 <div className="rep-success-info">
                   <div className="rep-success-info-item">
-                    <span>Username</span>
-                    <p>{(addStudentForm.firstName + addStudentForm.lastName).toLowerCase().replace(/\s+/g, '')}</p>
+                    <span>Username (LRN)</span>
+                    <p>{lastCreatedStudent?.lrn || addStudentForm.lrn || 'Generated LRN'}</p>
                   </div>
                   <div className="rep-success-info-item">
                     <span>Default Password</span>
@@ -3118,11 +4751,16 @@ const AdminDashboard = ({ user, onLogout }) => {
                       gradeLevel: addStudentForm.gradeLevel,
                       section: addStudentForm.section,
                       parentName: addStudentForm.parentName,
+                      parentPhone: addStudentForm.parentPhone,
+                      address: addStudentForm.address,
                       lrn: addStudentForm.lrn,
                     })
                   });
                   if (res.ok) {
+                    const result = await res.json();
+                    setLastCreatedStudent(result.student);
                     setAddStudentSuccess(true);
+                    addActivity('users', 'pink', `Registered new student: ${addStudentForm.firstName} ${addStudentForm.lastName} (${addStudentForm.gradeLevel} - ${addStudentForm.section}).`);
                     // Refresh admin data so the new student appears in the table
                     fetchAdminData();
                   } else {
@@ -3289,6 +4927,14 @@ const AdminDashboard = ({ user, onLogout }) => {
                         onChange={(e) => setAddStudentForm({...addStudentForm, parentPhone: e.target.value})}
                       />
                     </div>
+                    <div className="rep-form-group" style={{ gridColumn: 'span 2' }}>
+                      <label>Address</label>
+                      <input
+                        type="text" placeholder="e.g. Floridablanca, Pampanga"
+                        value={addStudentForm.address}
+                        onChange={(e) => setAddStudentForm({...addStudentForm, address: e.target.value})}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -3371,6 +5017,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 description: addEventForm.description
               };
               setCustomEvents([...customEvents, newEvent]);
+              addActivity('calendar', 'pink', `Scheduled new event: "${addEventForm.title}" for day ${parseInt(day, 10)}.`);
               setAddEventSuccess(true);
             }}>
               <div className="rep-form-section">
@@ -3458,6 +5105,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   } : ev
                 );
                 setCustomEvents(updatedEvents);
+                addActivity('edit', 'blue', `Updated event details: "${addEventForm.title}".`);
                 setSelectedEvent({
                   ...selectedEvent,
                   title: addEventForm.title,
@@ -3590,6 +5238,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                       className="rep-btn-submit" 
                       style={{ backgroundColor: '#ef4444', padding: '10px 20px', fontSize: '14px', flex: 1, border: 'none', justifyContent: 'center' }} 
                       onClick={() => {
+                        addActivity('trash', 'red', `Deleted event: "${selectedEvent.title}".`);
                         setCustomEvents(customEvents.filter(ev => ev.id !== selectedEvent.id));
                         setShowDeleteConfirm(false);
                         setSelectedEvent(null);
@@ -3669,6 +5318,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   });
                   if (res.ok) {
                     setAddTeacherSuccess(true);
+                    addActivity('users', 'blue', `Registered new teacher: ${fullName} (${addTeacherForm.gradeLevel || 'No Advisory'} - ${addTeacherForm.section || ''}).`);
                     fetchAdminData();
                   } else {
                     setAddTeacherError('Failed to add teacher. Please try again.');
@@ -3961,8 +5611,26 @@ const AdminDashboard = ({ user, onLogout }) => {
 
               {/* Responsive Table Card */}
               <div className="rep-enrollment-table-card">
-                <div className="rep-enrollment-table-header-bar">
+                <div className="rep-enrollment-table-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{enrollmentModalYear} Statistics</span>
+                  <button
+                    onClick={() => handleEditSchoolYearStats(enrollmentModalYear)}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      borderRadius: '6px',
+                      color: '#3B82F6',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <Edit size={13} /> Edit Data
+                  </button>
                 </div>
                 <div className="rep-enrollment-table-wrapper">
                   <table className="rep-enrollment-table">
@@ -4050,6 +5718,231 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── EDIT SCHOOL YEAR STATISTICS MODAL ─── */}
+      {showEditStatsModal && (
+        <div className="rep-compare-modal-overlay" style={{ zIndex: 700 }}>
+          <div
+            className="rep-compare-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '850px', height: 'auto', maxHeight: '90vh', overflowY: 'auto', padding: '24px' }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(59, 130, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6' }}>
+                  <Edit size={20} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#F1F5F9' }}>
+                    Edit statistics for {editStatsYear}
+                  </h2>
+                  <p style={{ margin: '2px 0 0', fontSize: '12.5px', color: '#64748B' }}>
+                    Manually update the enrollment, Repeaters, Dropouts, classrooms, seats, and teachers counts.
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowEditStatsModal(false)} className="rep-compare-close-btn">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content Form */}
+            <form onSubmit={handleSaveSchoolYearStats} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Year Totals Info Override */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', fontWeight: '700', marginBottom: '6px' }}>Total Functional Classrooms (Override)</label>
+                  <input 
+                    type="number"
+                    value={editStatsTotalClassrooms}
+                    onChange={(e) => setEditStatsTotalClassrooms(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      backgroundColor: '#0D131F',
+                      color: '#F8FAFC',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', fontWeight: '700', marginBottom: '6px' }}>Total Seats (Override)</label>
+                  <input 
+                    type="number"
+                    value={editStatsTotalSeats}
+                    onChange={(e) => setEditStatsTotalSeats(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      backgroundColor: '#0D131F',
+                      color: '#F8FAFC',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Grade Level Table Inputs */}
+              <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Grade Level</th>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Enrollment</th>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Repeaters</th>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Dropouts</th>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Classrooms</th>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Seats</th>
+                      <th style={{ padding: '12px 16px', color: '#94A3B8', fontWeight: '600' }}>Teachers</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editStatsForm.map((row, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: '600', color: '#F8FAFC' }}>{row.gradeLevel.toUpperCase()}</td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <input 
+                            type="number" 
+                            value={row.enrollment} 
+                            onChange={(e) => {
+                              const updated = [...editStatsForm];
+                              updated[idx].enrollment = Number(e.target.value) || 0;
+                              setEditStatsForm(updated);
+                            }}
+                            style={{ width: '75px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#0D131F', color: 'white', outline: 'none' }}
+                            required
+                            min="0"
+                          />
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <input 
+                            type="number" 
+                            value={row.repeaters} 
+                            onChange={(e) => {
+                              const updated = [...editStatsForm];
+                              updated[idx].repeaters = Number(e.target.value) || 0;
+                              setEditStatsForm(updated);
+                            }}
+                            style={{ width: '70px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#0D131F', color: 'white', outline: 'none' }}
+                            required
+                            min="0"
+                          />
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <input 
+                            type="number" 
+                            value={row.dropouts} 
+                            onChange={(e) => {
+                              const updated = [...editStatsForm];
+                              updated[idx].dropouts = Number(e.target.value) || 0;
+                              setEditStatsForm(updated);
+                            }}
+                            style={{ width: '70px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#0D131F', color: 'white', outline: 'none' }}
+                            required
+                            min="0"
+                          />
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <input 
+                            type="text" 
+                            value={row.classrooms} 
+                            onChange={(e) => {
+                              const updated = [...editStatsForm];
+                              updated[idx].classrooms = e.target.value;
+                              setEditStatsForm(updated);
+                            }}
+                            style={{ width: '70px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#0D131F', color: 'white', outline: 'none' }}
+                            required
+                          />
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <input 
+                            type="text" 
+                            value={row.seats} 
+                            onChange={(e) => {
+                              const updated = [...editStatsForm];
+                              updated[idx].seats = e.target.value;
+                              setEditStatsForm(updated);
+                            }}
+                            style={{ width: '70px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#0D131F', color: 'white', outline: 'none' }}
+                            required
+                          />
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <input 
+                            type="number" 
+                            value={row.teachers} 
+                            onChange={(e) => {
+                              const updated = [...editStatsForm];
+                              updated[idx].teachers = Number(e.target.value) || 0;
+                              setEditStatsForm(updated);
+                            }}
+                            style={{ width: '65px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#0D131F', color: 'white', outline: 'none' }}
+                            required
+                            min="0"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditStatsModal(false)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    color: '#94A3B8',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editStatsLoading}
+                  style={{
+                    padding: '8px 20px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                    color: 'white',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    opacity: editStatsLoading ? 0.7 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+                  }}
+                >
+                  {editStatsLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
       )}
@@ -4313,12 +6206,46 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <div style={{ flex: 1, minHeight: '260px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={getGradeComparisonChartData(compareSelectedYears)} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} barGap={4}>
+                        <defs>
+                          <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#1D4ED8" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#6D28D9" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradOrange" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#F97316" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#C2410C" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradGreen" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10B981" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#047857" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradRose" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#BE123C" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradPink" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#EC4899" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#BE185D" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradTeal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#0891B2" stopOpacity={0.25}/>
+                          </linearGradient>
+                          <linearGradient id="gradAmber" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor="#B45309" stopOpacity={0.25}/>
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 10}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 10}} />
-                        <Tooltip contentStyle={{backgroundColor: '#0F172A', borderColor: 'rgba(255,255,255,0.1)', color: '#fff'}} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-gray)', fontSize: 10}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--text-gray)', fontSize: 10}} />
+                        <Tooltip content={<CustomTooltip />} />
                         {compareSelectedYears.map((sy, idx) => (
-                          <Bar key={sy} dataKey={sy} fill={COMPARE_YEAR_COLORS[idx % COMPARE_YEAR_COLORS.length]} radius={[3, 3, 0, 0]} isAnimationActive={true} animationDuration={800} />
+                          <Bar key={sy} dataKey={sy} fill={COMPARE_YEAR_GRADIENTS[idx % COMPARE_YEAR_GRADIENTS.length]} radius={[3, 3, 0, 0]} isAnimationActive={true} animationDuration={800} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
@@ -4513,6 +6440,272 @@ const AdminDashboard = ({ user, onLogout }) => {
         </div>
       )}
 
+      {/* ─── EXPORT / IMPORT SCHOOL YEAR MODAL ─── */}
+      {showExportImportModal && (
+        <div className="rep-compare-modal-overlay" onClick={() => setShowExportImportModal(false)}>
+          <div className="rep-compare-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '650px', height: 'auto', padding: '0', overflow: 'hidden' }}>
+            {/* Modal Header */}
+            <div className="rep-compare-modal-header" style={{ padding: '20px 24px' }}>
+              <div className="rep-compare-modal-title">
+                <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(59, 130, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6' }}>
+                  <Download size={20} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#F8FAFC', margin: 0 }}>Export & Import School Data</h2>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748B' }}>Census data reports and upload records for academic school years.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowExportImportModal(false)} className="rep-compare-close-btn">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="rep-compare-modal-content" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              {/* Tab Selector */}
+              <div className="rep-expimp-tabs-container">
+                <button
+                  type="button"
+                  className={`rep-expimp-tab-btn ${exportImportTab === 'export' ? 'active' : ''}`}
+                  onClick={() => setExportImportTab('export')}
+                >
+                  <Download size={15} /> Export Report
+                </button>
+                <button
+                  type="button"
+                  className={`rep-expimp-tab-btn ${exportImportTab === 'import' ? 'active' : ''}`}
+                  onClick={() => setExportImportTab('import')}
+                >
+                  <Upload size={15} /> Import Data
+                </button>
+                <button
+                  type="button"
+                  className={`rep-expimp-tab-btn ${exportImportTab === 'manage' ? 'active' : ''}`}
+                  onClick={() => setExportImportTab('manage')}
+                >
+                  <Trash2 size={15} /> Manage School Years
+                </button>
+              </div>
+
+              {/* Export Section */}
+              {exportImportTab === 'export' && (
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#F8FAFC', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Download size={16} style={{ color: '#10B981' }} /> Export School Year Report
+                  </h3>
+                  <p style={{ fontSize: '12.5px', color: '#94A3B8', margin: '0 0 16px 0', lineHeight: '1.4' }}>
+                    Download a professionally formatted Excel spreadsheet (.xlsx) with enrollment counts, teachers, seats, and classrooms for the chosen school year or the entire 7-year history.
+                  </p>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: '700', marginBottom: '6px' }}>Select School Year</label>
+                      <select 
+                        value={exportYearSelect} 
+                        onChange={(e) => setExportYearSelect(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          backgroundColor: '#0D131F',
+                          color: '#F8FAFC',
+                          fontSize: '13px',
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="All">All School Years (2020-2027)</option>
+                        <option value="S.Y. 2020-2021">S.Y. 2020-2021</option>
+                        <option value="S.Y. 2021-2022">S.Y. 2021-2022</option>
+                        <option value="S.Y. 2022-2023">S.Y. 2022-2023</option>
+                        <option value="S.Y. 2023-2024">S.Y. 2023-2024</option>
+                        <option value="S.Y. 2024-2025">S.Y. 2024-2025</option>
+                        <option value="S.Y. 2025-2026">S.Y. 2025-2026</option>
+                        <option value="S.Y. 2026-2027">S.Y. 2026-2027</option>
+                      </select>
+                    </div>
+                    <button 
+                      onClick={handleExportReportYear}
+                      style={{
+                        alignSelf: 'flex-end',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                        color: 'white',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <Download size={15} /> Export File
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Import Section */}
+              {exportImportTab === 'import' && (
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#F8FAFC', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Upload size={16} style={{ color: '#3B82F6' }} /> Import New School Year Data
+                  </h3>
+                  <p style={{ fontSize: '12.5px', color: '#94A3B8', margin: '0 0 16px 0', lineHeight: '1.4' }}>
+                    Add or overwrite records for any school year by uploading a compatible Excel spreadsheet template. The spreadsheet must begin with a row containing the year label (e.g. <strong>"S.Y. 2020-2021"</strong>).
+                  </p>
+                  <form onSubmit={handleImportYear} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div 
+                      style={{ 
+                        border: '2px dashed rgba(255, 255, 255, 0.1)', 
+                        borderRadius: '10px', 
+                        padding: '24px', 
+                        textAlign: 'center',
+                        background: 'rgba(255, 255, 255, 0.01)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        position: 'relative'
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                          setImportFile(e.dataTransfer.files[0]);
+                        }
+                      }}
+                    >
+                      <input 
+                        type="file" 
+                        accept=".xlsx, .xls"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setImportFile(e.target.files[0]);
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          opacity: 0,
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <Upload size={28} style={{ color: '#64748B', marginBottom: '8px' }} />
+                      <p style={{ margin: 0, fontSize: '13px', fontWeight: '500', color: '#F8FAFC' }}>
+                        {importFile ? importFile.name : 'Click to select or drag & drop Excel file'}
+                      </p>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#64748B' }}>
+                        Supports .xlsx, .xls formats up to 10MB
+                      </p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                      {importFile && (
+                        <button 
+                          type="button"
+                          onClick={() => setImportFile(null)}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            color: '#94A3B8',
+                            fontSize: '12.5px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Clear File
+                        </button>
+                      )}
+                      <button 
+                        type="submit"
+                        disabled={importLoading || !importFile}
+                        style={{
+                          padding: '8px 20px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                          color: 'white',
+                          fontSize: '12.5px',
+                          fontWeight: '600',
+                          cursor: importFile ? 'pointer' : 'not-allowed',
+                          opacity: importFile ? 1 : 0.6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          boxShadow: importFile ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {importLoading ? 'Uploading...' : 'Upload & Import'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Manage School Years Section */}
+              {exportImportTab === 'manage' && (
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#F8FAFC', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Trash2 size={16} style={{ color: '#EF4444' }} /> Manage School Years
+                  </h3>
+                  <p style={{ fontSize: '12.5px', color: '#94A3B8', margin: '0 0 16px 0', lineHeight: '1.4' }}>
+                    Completely delete a school year and all its corresponding census data from the database. This action is irreversible.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px' }}>
+                    {globalYears.map(sy => (
+                      <div 
+                        key={sy} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between', 
+                          padding: '8px 12px', 
+                          backgroundColor: '#0D131F', 
+                          border: '1px solid rgba(255,255,255,0.06)', 
+                          borderRadius: '8px' 
+                        }}
+                      >
+                        <span style={{ fontSize: '12.5px', fontWeight: '500', color: '#F8FAFC' }}>{sy}</span>
+                        <button 
+                          type="button"
+                          onClick={() => handleDeleteSchoolYearClick(sy)}
+                          disabled={globalYears.length <= 1}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: globalYears.length <= 1 ? '#475569' : '#EF4444',
+                            cursor: globalYears.length <= 1 ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '4px',
+                            borderRadius: '4px',
+                            transition: 'background-color 0.2s'
+                          }}
+                          title={globalYears.length <= 1 ? "Cannot delete the only remaining school year" : `Delete ${sy}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── CUSTOM ALERT MODAL ─── */}
       {customAlert.show && (
         <div className="rep-modal-overlay" style={{ zIndex: 3100, background: 'rgba(4, 7, 12, 0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setCustomAlert({ ...customAlert, show: false })}>
@@ -4553,6 +6746,175 @@ const AdminDashboard = ({ user, onLogout }) => {
             >
               OK
             </button>
+          </div>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div className="rep-modal-overlay" onClick={() => setShowSettingsModal(false)}>
+          <div 
+            className="rep-modal-container" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '450px',
+              maxWidth: '90vw',
+              backgroundColor: '#0F172A',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              color: 'white',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(16px)',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="rep-modal-header" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ backgroundColor: 'rgba(139, 92, 246, 0.15)', color: '#8B5CF6', padding: '8px', borderRadius: '8px', display: 'flex' }}>
+                  <Settings size={20} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: 'white' }}>Admin Settings</h2>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#94A3B8' }}>Customize your portal preferences</p>
+                </div>
+              </div>
+              <button onClick={() => setShowSettingsModal(false)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newName = formData.get('adminName');
+                const newEmail = formData.get('adminEmail');
+                const newTheme = formData.get('adminTheme');
+                const newYear = formData.get('adminYear');
+                
+                if (newName) setAdminName(newName);
+                if (newEmail) setAdminEmail(newEmail);
+                if (newTheme) setTheme(newTheme);
+                if (newYear) setSelectedYear(newYear);
+                
+                setShowSettingsModal(false);
+              }}
+              style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', color: '#94A3B8' }}>Admin Name</label>
+                <input 
+                  type="text" 
+                  name="adminName"
+                  defaultValue={adminName} 
+                  required
+                  style={{
+                    backgroundColor: '#1E293B',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', color: '#94A3B8' }}>Admin Email</label>
+                <input 
+                  type="email" 
+                  name="adminEmail"
+                  defaultValue={adminEmail} 
+                  required
+                  style={{
+                    backgroundColor: '#1E293B',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', color: '#94A3B8' }}>Theme Selection</label>
+                <select 
+                  name="adminTheme"
+                  defaultValue={theme}
+                  style={{
+                    backgroundColor: '#1E293B',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="light">Light Mode</option>
+                  <option value="dark">Dark Mode</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', color: '#94A3B8' }}>Default School Year</label>
+                <select 
+                  name="adminYear"
+                  defaultValue={selectedYear}
+                  style={{
+                    backgroundColor: '#1E293B',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="S.Y. 2025-2026">S.Y. 2025-2026</option>
+                  <option value="S.Y. 2026-2027">S.Y. 2026-2027</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowSettingsModal(false)}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: 'transparent',
+                    color: '#94A3B8',
+                    fontSize: '13.5px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    color: 'white',
+                    fontSize: '13.5px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.25)'
+                  }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

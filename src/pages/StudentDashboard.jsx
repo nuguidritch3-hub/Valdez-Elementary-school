@@ -129,6 +129,26 @@ const StudentDashboard = ({ user, onLogout }) => {
     }
   }, [loading]);
 
+  useEffect(() => {
+    const handleNav = (e) => {
+      if (e.detail && e.detail.tab) {
+        const targetTab = e.detail.tab.toLowerCase();
+        if (targetTab.includes('dashboard') || targetTab.includes('overview')) setActiveFeature('overview');
+        else if (targetTab.includes('grade') || targetTab.includes('academic')) setActiveFeature('grades');
+        else if (targetTab.includes('attendance')) setActiveFeature('attendance');
+        else if (targetTab.includes('achievement') || targetTab.includes('award') || targetTab.includes('trophy')) setActiveFeature('achievements');
+        else if (targetTab.includes('announcement')) setActiveFeature('announcements');
+        else if (targetTab.includes('enrollment')) setActiveFeature('enrollment');
+        else if (targetTab.includes('payment')) setActiveFeature('payments');
+        else if (targetTab.includes('medical') || targetTab.includes('health')) setActiveFeature('medical');
+        else if (targetTab.includes('report') || targetTab.includes('card')) setActiveFeature('reportCard');
+        else if (targetTab.includes('help') || targetTab.includes('support')) setActiveFeature('help');
+      }
+    };
+    window.addEventListener('app-navigate', handleNav);
+    return () => window.removeEventListener('app-navigate', handleNav);
+  }, []);
+
   /* ── Subject proficiency data ── */
   const subjectProficiency = useMemo(() => {
     if (!studentData?.grades) return [];

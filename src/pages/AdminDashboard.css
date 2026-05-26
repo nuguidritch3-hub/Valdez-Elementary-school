@@ -1141,6 +1141,10 @@ select option {
   background-color: var(--accent-blue-bg);
   color: var(--accent-blue);
 }
+.rep-status-pill.pink {
+  background-color: var(--accent-pink-bg);
+  color: var(--accent-pink);
+}
 
 .rep-pagination {
   display: flex;
@@ -4756,4 +4760,201 @@ select option {
   max-height: 70vh;
   object-fit: contain;
   display: block;
+}
+
+/* Export/Import Modal Tabs */
+.rep-expimp-tabs-container {
+  display: flex;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 8px;
+}
+
+.rep-expimp-tab-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  color: #94A3B8;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.rep-expimp-tab-btn:hover {
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.rep-expimp-tab-btn.active {
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Redesigned Premium CSS Variables and Modern Overrides */
+:root {
+  --chart-grid-color: rgba(0, 0, 0, 0.05);
+  --chart-bg-track: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme='dark'] {
+  --chart-grid-color: rgba(255, 255, 255, 0.05);
+  --chart-bg-track: rgba(255, 255, 255, 0.03);
+}
+
+/* Recharts Custom Tooltip Styling */
+.custom-chart-tooltip {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+  font-family: 'Inter', sans-serif;
+  color: #F8FAFC;
+  font-size: 11px;
+}
+
+.custom-chart-tooltip .tooltip-label {
+  margin: 0 0 6px 0;
+  font-weight: 600;
+  font-size: 12px;
+  color: #FFFFFF;
+}
+
+.custom-chart-tooltip .tooltip-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.custom-chart-tooltip .tooltip-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-chart-tooltip .tooltip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.custom-chart-tooltip .tooltip-name {
+  color: #94A3B8;
+}
+
+.custom-chart-tooltip .tooltip-value {
+  font-weight: 600;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Glassmorphism Premium Cards & Widgets Styling */
+.rep-card, .rep-premium-card, .rep-premium-kpi-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s;
+}
+
+.rep-card:hover, .rep-premium-card:hover, .rep-premium-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+[data-theme='dark'] .rep-card,
+[data-theme='dark'] .rep-premium-card,
+[data-theme='dark'] .rep-premium-kpi-card {
+  background: rgba(30, 41, 59, 0.45) !important;
+  backdrop-filter: blur(12px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme='dark'] .rep-card:hover,
+[data-theme='dark'] .rep-premium-card:hover,
+[data-theme='dark'] .rep-premium-kpi-card:hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 12px 35px -5px rgba(99, 102, 241, 0.15), 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Slight glowing effects in dark mode for numbers */
+[data-theme='dark'] .rep-premium-kpi-value,
+[data-theme='dark'] .rep-stat-value,
+[data-theme='dark'] .rep-donut-total {
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Premium Scrollbars */
+.rep-content-scroll::-webkit-scrollbar,
+.rep-student-table-container::-webkit-scrollbar,
+.rep-sidebar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.rep-content-scroll::-webkit-scrollbar-track,
+.rep-student-table-container::-webkit-scrollbar-track,
+.rep-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rep-content-scroll::-webkit-scrollbar-thumb,
+.rep-student-table-container::-webkit-scrollbar-thumb,
+.rep-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.2);
+  border-radius: 4px;
+}
+
+.rep-content-scroll::-webkit-scrollbar-thumb:hover,
+.rep-student-table-container::-webkit-scrollbar-thumb:hover,
+.rep-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.4);
+}
+
+[data-theme='dark'] .rep-content-scroll::-webkit-scrollbar-thumb,
+[data-theme='dark'] .rep-student-table-container::-webkit-scrollbar-thumb,
+[data-theme='dark'] .rep-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .rep-content-scroll::-webkit-scrollbar-thumb:hover,
+[data-theme='dark'] .rep-student-table-container::-webkit-scrollbar-thumb:hover,
+[data-theme='dark'] .rep-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Modernize lists, text colors, and sub-panels */
+[data-theme='dark'] .rep-notice-item {
+  background: rgba(30, 41, 59, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme='dark'] .rep-todo-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme='dark'] .rep-announcement-card {
+  background: rgba(30, 41, 59, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Make Recharts labels and lines fit elegantly */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke-opacity: 0.7;
+}
+
+[data-theme='dark'] .recharts-cartesian-axis-tick text {
+  fill: #94A3B8 !important;
 }

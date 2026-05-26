@@ -1,0 +1,129 @@
+
+    
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset="utf-8">
+  <title>Document</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.6; font-size: 11pt; color: #1e293b; padding: 20px; }
+    h1 { color: #1e3a8a; font-size: 20pt; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-top: 30px; margin-bottom: 12px; font-weight: bold; }
+    h2 { color: #2563eb; font-size: 16pt; margin-top: 25px; margin-bottom: 10px; font-weight: bold; }
+    h3 { color: #0f766e; font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
+    p { margin-bottom: 12px; text-align: justify; }
+    ul, ol { margin-top: 5px; margin-bottom: 12px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .strong-term { font-weight: bold; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; font-size: 10.5pt; }
+    th { background-color: #e2e8f0; font-weight: bold; border: 1px solid #94a3b8; padding: 10px; text-align: left; color: #1e293b; }
+    td { border: 1px solid #cbd5e1; padding: 10px; vertical-align: top; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .note { background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #14532d; border-radius: 4px; }
+    .warning-note { background-color: #fff7ed; border-left: 4px solid #ea580c; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #7c2d12; border-radius: 4px; }
+    .title-page { text-align: center; padding-top: 120px; padding-bottom: 120px; }
+    .title { font-size: 28pt; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; }
+    .subtitle { font-size: 16pt; color: #475569; margin-bottom: 60px; font-style: italic; }
+    .school-name { font-size: 13pt; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+    .school-loc { font-size: 11pt; color: #64748b; margin-bottom: 40px; }
+    .info { font-size: 10pt; color: #64748b; margin-top: 100px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+    <div class="title-page">
+      <div class="title">VALDEZ ELEMENTARY SCHOOL PORTAL</div>
+      <div class="subtitle">Operating Guide & System Details: Bella AI Assistant Mascot</div>
+      <div class="school-name">Valdez Elementary School</div>
+      <div class="school-loc">Floridablanca, Pampanga</div>
+      <div class="info">
+        Document Version: 1.1<br>
+        Published: May 2026<br>
+        Component: Interactive Cat Chatbot with Gemini API & Persistent Memory
+      </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1>1. Meet Bella: The School AI Companion</h1>
+    <p>Bella is an interactive, animated, cat-themed AI assistant displayed on the lower-right corner of all dashboards within the Valdez Elementary School Portal. Implemented entirely as a lightweight inline SVG chatbot component, Bella combines a playful cat personality with deep, real-time access to the school portal's database.</p>
+    <p>Key features of Bella include:</p>
+    <ul>
+      <li><span class="strong-term">Micro-Animations:</span> Bella displays subtle breathing animations, ear wiggles, and interactive mouse-hover transitions that draw engagement.</li>
+      <li><span class="strong-term">Unified Context Analysis:</span> Bella responds directly to queries in natural language, answering questions about students, classes, faculty, dropouts, and school year comparisons.</li>
+      <li><span class="strong-term">Persistent Fact Learning:</span> Bella remembers customized administrator instructions or daily tasks and stores them in a persistent JSON database file.</li>
+    </ul>
+
+    <h1>2. Setting up Bella (Gemini API Configuration)</h1>
+    <p>Bella features two distinct processing modes: a Local Rule Engine and a Remote Gemini API Integration. To configure Gemini integration:</p>
+    <ol>
+      <li>Click the <span class="strong-term">'Bella AI Config'</span> button or enter the config panel via the Admin Dashboard's sidebar.</li>
+      <li>Obtain a Google Gemini API Key from the Google AI Studio console (https://aistudio.google.com/).</li>
+      <li>Paste the key into the API input box and click <span class="strong-term">'Save Key'</span>. This saves the key configuration to the server's private config file.</li>
+    </ol>
+    <div class="note">
+      <strong>💡 NOTE:</strong> If no API key is set, Bella automatically transitions into Local Fallback Mode. In this mode, Bella uses localized logic to answer database questions, navigate tabs, and manage memories, ensuring the system remains operational without an internet connection.
+    </div>
+
+    <h1>3. Asking Bella about School Data (Natural Language Q&A)</h1>
+    <p>You can converse with Bella using regular, conversational phrasing. Under the hood, the system parses current student lists and census metrics to answer questions with live statistics:</p>
+
+    <h2>3.1 Enrollment & Stats Inquiries</h2>
+    <p>Ask Bella about student enrollment numbers or grade level capacities. Examples:</p>
+    <ul>
+      <li><em>"How many students are enrolled in Grade 1?"</em></li>
+      <li><em>"Which grade level has the highest enrollment?"</em></li>
+      <li><em>"What is the overall seat capacity in Grade 3?"</em></li>
+    </ul>
+
+    <h2>3.2 Teacher & Performance Inquiries</h2>
+    <p>You can query teacher profiles and assignments:</p>
+    <ul>
+      <li><em>"Who is the teacher assigned to Grade 1 - Mabini?"</em></li>
+      <li><em>"Which subject does Ritch Nuguid teach?"</em></li>
+      <li><em>"Show me the contact details of teacher Maria Santos."</em></li>
+    </ul>
+
+    <h2>3.3 Dropouts & Repeater Statistics</h2>
+    <p>Ask about critical dropouts or historical year-on-year trends:</p>
+    <ul>
+      <li><em>"How many student dropouts do we have in total?"</em></li>
+      <li><em>"Compare the dropout rates between the selected years."</em></li>
+    </ul>
+
+    <h1>4. Teaching Bella: The Persistent Memory System</h1>
+    <p>Bella is equipped with a localized Fact-Learning Engine. You can teach Bella facts, reminders, or operational instructions. When you instruct her to remember something, she sends an API request to the server, which writes the fact to 'server/data/bella_memory.json':</p>
+    <ul>
+      <li><span class="strong-term">Teaching a Fact:</span> Use the syntax "Remember that [fact]" (e.g., "Remember that the Grade 4 classroom audit is scheduled for next Thursday").</li>
+      <li><span class="strong-term">Recalling Memories:</span> Ask "What do you remember?" or click the quick query chip "🧠 Bella's Memory" in the chat header to list all saved facts.</li>
+      <li><span class="strong-term">Clearing Memory:</span> Click the "Clear Memory" button or say "clear your memories" to wipe the memory file and start fresh.</li>
+    </ul>
+
+    <h1>5. Navigation Commands</h1>
+    <p>Bella can redirect you to various sections of the dashboard. Instead of clicking the sidebar, you can instruct Bella to navigate:</p>
+    <ul>
+      <li><span class="strong-term">Registry Navigation:</span> "Take me to the student roster page" or "open student registry"</li>
+      <li><span class="strong-term">Tools Navigation:</span> "Show me the database tools" or "go to backup section"</li>
+      <li><span class="strong-term">Analytics Navigation:</span> "Open the year statistics comparison board" or "compare years"</li>
+    </ul>
+
+    <h1>6. Troubleshooting Bella</h1>
+    <p>If Bella does not respond as expected, check the following details:</p>
+    <ul>
+      <li><span class="strong-term">Server Offline:</span> Verify that the backend server is running (npm run server) and listening on port 5000.</li>
+      <li><span class="strong-term">Gemini API Failures:</span> Verify that the Gemini API Key is valid and has active quotas in the Google AI Studio Console.</li>
+      <li><span class="strong-term">Memory Storage Denied:</span> Check that the user account running the server has write permissions for the 'server/data/' folder to save memory files.</li>
+    </ul>
+    
+</body>
+</html>
+
+  

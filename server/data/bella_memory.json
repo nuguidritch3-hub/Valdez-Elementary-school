@@ -1,0 +1,499 @@
+{
+  "memories": [
+    {
+      "id": "mpjofipluxb3",
+      "fact": "the principal's office is room 101",
+      "category": "school",
+      "keywords": [
+        "principals",
+        "office",
+        "room",
+        "101"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-24T11:11:00.729Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mpjokxd3dbj9",
+      "fact": "all in the admin dashboard",
+      "category": "general",
+      "keywords": [
+        "admin",
+        "dashboard"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-24T11:15:12.999Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mpjon4w12r68",
+      "fact": "can you guide where the student is",
+      "category": "school",
+      "keywords": [
+        "guide",
+        "student"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-24T11:16:56.065Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mpjon8bqfl2u",
+      "fact": "teacher sarah is in room 101",
+      "category": "school",
+      "keywords": [
+        "teacher",
+        "sarah",
+        "room",
+        "101"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-24T11:17:00.518Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mplvavtoo6ql",
+      "fact": "remeber thiis when say hi renspponse to meow",
+      "category": "general",
+      "keywords": [
+        "remeber",
+        "thiis",
+        "renspponse",
+        "meow"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-25T23:58:54.108Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mpm6ikrgxu87",
+      "fact": "ing plan",
+      "category": "general",
+      "keywords": [
+        "ing",
+        "plan"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-26T05:12:48.796Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mpm6vsfekuej",
+      "fact": "ing plan, exams, leaderboard, and student roster",
+      "category": "school",
+      "keywords": [
+        "ing",
+        "plan",
+        "exams",
+        "leaderboard",
+        "student",
+        "roster"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-26T05:23:05.258Z",
+      "recallCount": 0
+    },
+    {
+      "id": "mpmfu8jrvrzj",
+      "fact": "Are there any problems or warnings in our school data?",
+      "category": "school",
+      "keywords": [
+        "problems",
+        "warnings",
+        "school",
+        "data"
+      ],
+      "source": "user",
+      "learnedAt": "2026-05-26T09:33:49.383Z",
+      "recallCount": 0
+    }
+  ],
+  "conversationLog": [
+    {
+      "userMessage": "Remember that the principal's office is room 101",
+      "bellaResponse": "*ears perk up* 🐱✨ Ooh! I just learned something new!\n\n🧠 **\"the principal's office is room 101\"**\n📁 Category: school\n\nI'll remember this forever! You can ask me about it anytime. Teach me more~ *purrs* 🐾",
+      "timestamp": "2026-05-24T11:11:00.778Z"
+    },
+    {
+      "userMessage": "bella",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **503** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾",
+      "timestamp": "2026-05-24T11:12:25.563Z"
+    },
+    {
+      "userMessage": "What do you remember?",
+      "bellaResponse": "*purrs proudly* I remember **1 thing(s)**! Here are my recent memories:\n\n• 🧠 **the principal's office is room 101** *(school, 2m ago)*\n\nTeach me more anytime~ 🐱✨",
+      "timestamp": "2026-05-24T11:13:30.647Z"
+    },
+    {
+      "userMessage": "who is in room 101",
+      "bellaResponse": "🏫 Classroom sections: Kinder — Section A, Grade 1 — Mabini, Grade 2 — Rizal, Grade 3 — Del Pilar, Grade 4 — Aguinaldo, Grade 5 — Gomez, Grade 6 — Sampaguita\n\nTotal functional classrooms: 15\nTotal seats: 461\n\n---\n🧠 *Bella recalls:* \"the principal's office is room 101\"",
+      "timestamp": "2026-05-24T11:14:09.608Z"
+    },
+    {
+      "userMessage": "Remember all in the admin dashboard",
+      "bellaResponse": "*ears perk up* 🐱✨ Ooh! I just learned something new!\n\n🧠 **\"all in the admin dashboard\"**\n📁 Category: general\n\nI'll remember this forever! You can ask me about it anytime. Teach me more~ *purrs* 🐾",
+      "timestamp": "2026-05-24T11:15:13.026Z"
+    },
+    {
+      "userMessage": "who is in room 101",
+      "bellaResponse": "🏫 Classroom sections: Kinder — Section A, Grade 1 — Mabini, Grade 2 — Rizal, Grade 3 — Del Pilar, Grade 4 — Aguinaldo, Grade 5 — Gomez, Grade 6 — Sampaguita\n\nTotal functional classrooms: 15\nTotal seats: 461",
+      "timestamp": "2026-05-24T11:16:00.290Z"
+    },
+    {
+      "userMessage": "total student",
+      "bellaResponse": "📊 For **S.Y. 2025-2026**, the school has **503 total enrolled students** in the census data.\n\nFrom the live student records:\n• **6** currently Enrolled\n• **1** Dropped\n\nThe school manages grades from Kinder through Grade 6! 🎓",
+      "timestamp": "2026-05-24T11:16:23.174Z"
+    },
+    {
+      "userMessage": "What do you remember?",
+      "bellaResponse": "*purrs proudly* I remember **1 thing(s)**! Here are my recent memories:\n\n• 🧠 **all in the admin dashboard** *(general, 1m ago)*\n\nTeach me more anytime~ 🐱✨",
+      "timestamp": "2026-05-24T11:16:23.739Z"
+    },
+    {
+      "userMessage": "can you guide where the student is",
+      "bellaResponse": "*ears twitch* 🐱 I absorbed what you said and stored it in my memory!\n\n🧠 Learned: **\"can you guide where the student is\"**\n\nHere's a quick summary of **S.Y. 2025-2026**:\n• 📊 **503** students  • 👩‍🏫 **15** teachers\n\nKeep talking to me — I learn from everything! 🐾",
+      "timestamp": "2026-05-24T11:16:56.087Z"
+    },
+    {
+      "userMessage": "Remember that teacher Sarah is in room 101",
+      "bellaResponse": "*ears perk up* 🐱✨ Ooh! I just learned something new!\n\n🧠 **\"teacher sarah is in room 101\"**\n📁 Category: school\n\nI'll remember this forever! You can ask me about it anytime. Teach me more~ *purrs* 🐾",
+      "timestamp": "2026-05-24T11:17:00.646Z"
+    },
+    {
+      "userMessage": "who is in room 101",
+      "bellaResponse": "🏫 Classroom sections: Kinder — Section A, Grade 1 — Mabini, Grade 2 — Rizal, Grade 3 — Del Pilar, Grade 4 — Aguinaldo, Grade 5 — Gomez, Grade 6 — Sampaguita\n\nTotal functional classrooms: 15\nTotal seats: 461\n\n---\n🧠 *Bella recalls:* \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-24T11:17:35.662Z"
+    },
+    {
+      "userMessage": "hi",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **503** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"can you guide where the student is\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-24T11:29:02.123Z"
+    },
+    {
+      "userMessage": "bella",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **503** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾",
+      "timestamp": "2026-05-24T11:29:17.701Z"
+    },
+    {
+      "userMessage": "hi",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **503** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"can you guide where the student is\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-24T11:33:04.065Z"
+    },
+    {
+      "userMessage": "What dashboards are available?",
+      "bellaResponse": "🏫 **Valdez Elementary School Portal** has 3 dashboards:\n\n• **Admin Dashboard** — Full school management: enrollment data, teacher management, grade analytics, calendar, school year comparisons, export/import data\n\n• **Teacher Dashboard** — Class management: student grades, leaderboard, announcements, exam creation, calendar\n\n• **Student/Parent Dashboard** — Academic overview: grades, attendance, achievements, subject proficiency, report cards\n\nI have access to ALL of this data! Ask Bella anything specific~ 🐱\n\n💡 **NEW:** You can also teach me things! Say \"Remember that...\" and I'll learn it forever! 🧠",
+      "timestamp": "2026-05-24T11:33:10.678Z"
+    },
+    {
+      "userMessage": "What is the average grade performance?",
+      "bellaResponse": "📈 Based on **7 students** in the database:\n• Overall grade average: **86.1%**\n• Subjects tracked: Math, Science, English, Filipino, MAPEH, Makabayan\n• Quarters: Q1 through Q4\n\nFor detailed breakdowns, check the Admin or Teacher dashboards! 📊",
+      "timestamp": "2026-05-24T11:33:25.132Z"
+    },
+    {
+      "userMessage": "Show me school year trends",
+      "bellaResponse": "📅 School Year Data (5 years tracked):\n\n• **S.Y. 2021-2022**: 484 students, 16 teachers, 2 dropouts\n• **S.Y. 2022-2023**: 472 students, 15 teachers, 7 dropouts\n• **S.Y. 2023-2024**: 500 students, 15 teachers, 7 dropouts\n• **S.Y. 2024-2025**: 489 students, 14 teachers, 2 dropouts\n• **S.Y. 2025-2026**: 503 students, 15 teachers, 5 dropouts\n\nUse the Compare Year feature in the Admin dashboard for detailed analysis!",
+      "timestamp": "2026-05-24T11:33:29.241Z"
+    },
+    {
+      "userMessage": "recommendation and insight",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **503** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾",
+      "timestamp": "2026-05-24T11:48:00.353Z"
+    },
+    {
+      "userMessage": "What dashboards are available?",
+      "bellaResponse": "🏫 **Valdez Elementary School Portal** has 3 dashboards:\n\n• **Admin Dashboard** — Full school management: enrollment data, teacher management, grade analytics, calendar, school year comparisons, export/import data\n\n• **Teacher Dashboard** — Class management: student grades, leaderboard, announcements, exam creation, calendar\n\n• **Student/Parent Dashboard** — Academic overview: grades, attendance, achievements, subject proficiency, report cards\n\nI have access to ALL of this data! Ask Bella anything specific~ 🐱\n\n💡 **NEW:** You can also teach me things! Say \"Remember that...\" and I'll learn it forever! 🧠",
+      "timestamp": "2026-05-25T01:20:40.500Z"
+    },
+    {
+      "userMessage": "What is the average grade performance?",
+      "bellaResponse": "📈 Based on **7 students** in the database:\n• Overall grade average: **86.1%**\n• Subjects tracked: Math, Science, English, Filipino, MAPEH, Makabayan\n• Quarters: Q1 through Q4\n\nFor detailed breakdowns, check the Admin or Teacher dashboards! 📊",
+      "timestamp": "2026-05-25T01:20:51.597Z"
+    },
+    {
+      "userMessage": "hhi",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **503** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾",
+      "timestamp": "2026-05-25T01:20:56.876Z"
+    },
+    {
+      "userMessage": "What do you remember?",
+      "bellaResponse": "*purrs proudly* I remember **4 thing(s)**! Here are my recent memories:\n\n• 🧠 **teacher sarah is in room 101** *(school, 1d ago)*\n• 🧠 **can you guide where the student is** *(school, 1d ago)*\n• 🧠 **all in the admin dashboard** *(general, 1d ago)*\n• 🧠 **the principal's office is room 101** *(school, 1d ago)*\n\nTeach me more anytime~ 🐱✨",
+      "timestamp": "2026-05-25T23:58:27.199Z"
+    },
+    {
+      "userMessage": "remeber thiis when say hi renspponse to meow",
+      "bellaResponse": "*ears twitch* 🐱 I absorbed what you said and stored it in my memory!\n\n🧠 Learned: **\"remeber thiis when say hi renspponse to meow\"**\n\nHere's a quick summary of **S.Y. 2026-2027**:\n• 📊 **7** students  • 👩‍🏫 **1** teachers\n\nKeep talking to me — I learn from everything! 🐾",
+      "timestamp": "2026-05-25T23:58:54.138Z"
+    },
+    {
+      "userMessage": "hi",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2026-2027**:\n\n• 📊 **7** total students\n• 👩‍🏫 **1** teachers\n• ⚠️ **0** dropouts\n• 📋 **0** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾\n\n---\n🧠 *Bella recalls:* \"can you guide where the student is\", \"teacher sarah is in room 101\", \"remeber thiis when say hi renspponse to meow\"",
+      "timestamp": "2026-05-25T23:59:04.732Z"
+    },
+    {
+      "userMessage": "Tell me about the teachers",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).",
+      "timestamp": "2026-05-26T01:18:10.258Z"
+    },
+    {
+      "userMessage": "navigate to analytics",
+      "bellaResponse": "*purrs* 🐱 Switching you to the **Analytics** view~ 📊",
+      "timestamp": "2026-05-26T01:18:47.161Z"
+    },
+    {
+      "userMessage": "go to teachers list",
+      "bellaResponse": "*purrs* 🐱 Opening the **Teachers** list for you~ 👩‍🏫",
+      "timestamp": "2026-05-26T01:19:05.054Z"
+    },
+    {
+      "userMessage": "GO TO TEACHER LIST",
+      "bellaResponse": "*purrs* 🐱 Opening the **Teachers** list for you~ 👩‍🏫",
+      "timestamp": "2026-05-26T01:19:42.903Z"
+    },
+    {
+      "userMessage": "HI",
+      "bellaResponse": "*purrs* Great question! While I think about that, here's a quick summary of **S.Y. 2025-2026**:\n\n• 📊 **502** total students\n• 👩‍🏫 **15** teachers\n• ⚠️ **5** dropouts\n• 📋 **3** repeaters\n\n💡 You can teach me things! Say \"Remember that...\" and I'll absorb it~ 🐾\n\n---\n🧠 *Bella recalls:* \"can you guide where the student is\", \"teacher sarah is in room 101\", \"remeber thiis when say hi renspponse to meow\"",
+      "timestamp": "2026-05-26T01:19:50.040Z"
+    },
+    {
+      "userMessage": "navigate to exams",
+      "bellaResponse": "*purrs* 🐱 Taking you to the **Exams** dashboard~ 📝",
+      "timestamp": "2026-05-26T01:20:47.666Z"
+    },
+    {
+      "userMessage": "go to achievements",
+      "bellaResponse": "*purrs* 🐱 Opening the **Achievements** list~ 🏆",
+      "timestamp": "2026-05-26T01:22:23.893Z"
+    },
+    {
+      "userMessage": "hi",
+      "bellaResponse": "*purrs* Hello! I'm Bella, your friendly cat assistant. How are you doing today? 🐾",
+      "timestamp": "2026-05-26T01:27:01.152Z"
+    },
+    {
+      "userMessage": "how are you?",
+      "bellaResponse": "*purrs happily* I'm doing claw-some, thank you! Just keeping watch over our school database. How are you doing? 🐱💖",
+      "timestamp": "2026-05-26T01:27:36.670Z"
+    },
+    {
+      "userMessage": "go to grades",
+      "bellaResponse": "*purrs* 🐱 Navigating to your **Grades** / Academics overview~ 📈",
+      "timestamp": "2026-05-26T01:28:07.884Z"
+    },
+    {
+      "userMessage": "HI",
+      "bellaResponse": "*purrs* Hello! I'm Bella, your friendly cat assistant. How are you doing today? 🐾",
+      "timestamp": "2026-05-26T01:29:57.867Z"
+    },
+    {
+      "userMessage": "hi",
+      "bellaResponse": "*ears perk up* Nya~ Hi! Hope you are having a wonderful day. How can I help you navigate the school portal? 🌸",
+      "timestamp": "2026-05-26T01:38:20.125Z"
+    },
+    {
+      "userMessage": "hi",
+      "bellaResponse": "*wags tail* Hey there! Bella is ready to assist you. Ask me anything, or tell me to navigate somewhere! 🐾",
+      "timestamp": "2026-05-26T04:32:38.418Z"
+    },
+    {
+      "userMessage": "can give me the instructions howto use this dashboard",
+      "bellaResponse": "🏫 **Valdez Elementary School Portal** has 3 dashboards:\n\n• **Admin Dashboard** — Full school management: enrollment data, teacher management, grade analytics, calendar, school year comparisons, export/import data\n\n• **Teacher Dashboard** — Class management: student grades, leaderboard, announcements, exam creation, calendar\n\n• **Student/Parent Dashboard** — Academic overview: grades, attendance, achievements, subject proficiency, report cards\n\nI have access to ALL of this data! Ask Bella anything specific~ 🐱\n\n💡 **NEW:** You can also teach me things! Say \"Remember that...\" and I'll learn it forever! 🧠\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T04:33:11.209Z"
+    },
+    {
+      "userMessage": "how do we use the dashboard?",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T04:59:56.930Z"
+    },
+    {
+      "userMessage": "how to use the teacher dashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:00:22.301Z"
+    },
+    {
+      "userMessage": "How do I use the teacher dashboard?",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:00:50.500Z"
+    },
+    {
+      "userMessage": "What dashboards are available?",
+      "bellaResponse": "🏫 **Valdez Elementary School Portal** has 3 dashboards:\n\n• **Admin Dashboard** — Full school management: enrollment data, teacher management, grade analytics, calendar, school year comparisons, export/import data\n\n• **Teacher Dashboard** — Class management: student grades, leaderboard, announcements, exam creation, calendar\n\n• **Student/Parent Dashboard** — Academic overview: grades, attendance, achievements, subject proficiency, report cards\n\nI have access to ALL of this data! Ask Bella anything specific~ 🐱\n\n💡 **NEW:** You can also teach me things! Say \"Remember that...\" and I'll learn it forever! 🧠",
+      "timestamp": "2026-05-26T05:01:10.267Z"
+    },
+    {
+      "userMessage": "How do we use the teacher dashboard?",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:01:42.516Z"
+    },
+    {
+      "userMessage": "how to use the faculty dashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:02:33.169Z"
+    },
+    {
+      "userMessage": "how to use the student dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE STUDENT/PARENT DASHBOARD**\n\nThis dashboard is designed for students and parents to view student performance and records. Here is a detailed breakdown of the features available:\n\n• **Dashboard / Overview**: Shows the student's adviser details, academic status card, a list of subject proficiency cards (color-coded), and upcoming calendar events.\n• **Grades / Academics**: Access detailed quarterly subject grades (Q1 to Q4) for Math, Science, English, Filipino, MAPEH, and Makabayan. Displays final averages and visual indicators (Passed/Failed).\n• **Attendance**: Displays an interactive monthly attendance calendar highlighting present, absent, or late days.\n• **Achievements**: View a list of certificates, medals, and academic awards earned.\n• **Enrollment**: Access official student profile information (LRN, grade level, section, and enrolled dates).\n• **Payments**: Financial records detailing school fees, tuition summaries, and payment history.\n• **Medical / Health**: Digital clinic card detailing physical growth (height, weight), vaccination records, dental checkups, and consultation logs.\n• **Report Card**: View, request, and print official report cards.\n• **Help / Support**: Portal user guide, FAQs, and contact forms for administrative assistance.\n\n*purrs* Let me know if you want me to navigate you to any of these tabs, nya~! 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"can you guide where the student is\"",
+      "timestamp": "2026-05-26T05:03:12.842Z"
+    },
+    {
+      "userMessage": "What do you remember?",
+      "bellaResponse": "*purrs proudly* I remember **5 thing(s)**! Here are my recent memories:\n\n• 🧠 **remeber thiis when say hi renspponse to meow** *(general, 5h ago)*\n• 🧠 **teacher sarah is in room 101** *(school, 1d ago)*\n• 🧠 **can you guide where the student is** *(school, 1d ago)*\n• 🧠 **all in the admin dashboard** *(general, 1d ago)*\n• 🧠 **the principal's office is room 101** *(school, 1d ago)*\n\nTeach me more anytime~ 🐱✨",
+      "timestamp": "2026-05-26T05:03:33.228Z"
+    },
+    {
+      "userMessage": "student",
+      "bellaResponse": "*tilts head* 🐱 I'm not quite sure how to answer that specific question, but I'm here as your school companion!\n\nYou can ask me about students, teachers, grades, dropouts, repeaters, or announcements. You can also tell me to navigate to any tab (like \"go to calendar\" or \"open analytics\")! 🐾\n\n---\n🧠 *Bella recalls:* \"can you guide where the student is\"",
+      "timestamp": "2026-05-26T05:04:09.004Z"
+    },
+    {
+      "userMessage": "how to use the teacher dashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:05:09.656Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:05:33.134Z"
+    },
+    {
+      "userMessage": "how to use the teacher dashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:06:01.207Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:06:25.058Z"
+    },
+    {
+      "userMessage": "how to use the classroom dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:07:23.810Z"
+    },
+    {
+      "userMessage": "how to use the classroom dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:07:50.830Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:08:15.850Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:08:45.238Z"
+    },
+    {
+      "userMessage": "how to use the teacherdashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).",
+      "timestamp": "2026-05-26T05:09:16.859Z"
+    },
+    {
+      "userMessage": "how to use the admin dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:09:46.160Z"
+    },
+    {
+      "userMessage": "What is 2 + 2?",
+      "bellaResponse": "Bella can help you with:\n\n• 📊 **Student enrollment** numbers and trends\n• 👩‍🏫 **Teacher information** and assignments\n• 📈 **Academic performance** and grades\n• ⚠️ **Dropout and repeater** statistics\n• 📢 **School announcements**\n• 🏫 **Classroom** and section details\n• 📅 **School year** historical data\n• 🧠 **Teach me things** — say \"Remember that...\" and I'll learn!\n• 🐾 **Recall memories** — ask \"What do you remember?\"\n\nI absorb everything you tell me~ 🐱",
+      "timestamp": "2026-05-26T05:09:46.361Z"
+    },
+    {
+      "userMessage": "t",
+      "bellaResponse": "*tilts head* 🐱 I'm not quite sure how to answer that specific question, but I'm here as your school companion!\n\nYou can ask me about students, teachers, grades, dropouts, repeaters, or announcements. You can also tell me to navigate to any tab (like \"go to calendar\" or \"open analytics\")! 🐾\n\n---\n🧠 *Bella recalls:* \"can you guide where the student is\", \"teacher sarah is in room 101\", \"remeber thiis when say hi renspponse to meow\"",
+      "timestamp": "2026-05-26T05:10:09.984Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:10:58.659Z"
+    },
+    {
+      "userMessage": "how to use the educator dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:11:47.433Z"
+    },
+    {
+      "userMessage": "how to use the teacher dashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:12:21.999Z"
+    },
+    {
+      "userMessage": "learning plan",
+      "bellaResponse": "*ears perk up* 🐱✨ Ooh! I just learned something new!\n\n🧠 **\"ing plan\"**\n📁 Category: general\n\nI'll remember this forever! You can ask me about it anytime. Teach me more~ *purrs* 🐾",
+      "timestamp": "2026-05-26T05:12:49.195Z"
+    },
+    {
+      "userMessage": "how to use the educator dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:13:45.127Z"
+    },
+    {
+      "userMessage": "What dashboards are available?",
+      "bellaResponse": "🏫 **Valdez Elementary School Portal** has 3 dashboards:\n\n• **Admin Dashboard** — Full school management: enrollment data, teacher management, grade analytics, calendar, school year comparisons, export/import data\n\n• **Teacher Dashboard** — Class management: student grades, leaderboard, announcements, exam creation, calendar\n\n• **Student/Parent Dashboard** — Academic overview: grades, attendance, achievements, subject proficiency, report cards\n\nI have access to ALL of this data! Ask Bella anything specific~ 🐱\n\n💡 **NEW:** You can also teach me things! Say \"Remember that...\" and I'll learn it forever! 🧠",
+      "timestamp": "2026-05-26T05:14:02.431Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:14:39.597Z"
+    },
+    {
+      "userMessage": "how to use the instructor dashboard",
+      "bellaResponse": "🐱 **HOW TO USE THE ADMIN DASHBOARD**\n\nThis dashboard gives administrators complete control over Valdez Elementary School's portal. Here is a comprehensive guide to all tabs and popup modals:\n\n**1. Main Tabs & Sections:**\n• **Dashboard**: Track overall metrics (Total Students, Repeaters, Dropouts, Classrooms, Teachers, Seats) for the selected School Year (S.Y.). Create or delete school years. Trigger the **Edit Census Stats** modal to adjust baseline statistics.\n• **Calendar**: Post school-wide notices and events using the **Add Event** modal.\n• **Teachers**: Search, edit, delete, or add new teachers. Assign teachers to specific grade levels and sections.\n• **Students**: Roster of all students with advanced filters. Actions include editing details, deleting students, updating enrollment status, and viewing individual grade sheets. Add students using the **Add Student** modal.\n• **Analytics**: Performance charts, average grades, and visual metrics comparing school years.\n• **Accounts**: Search and update usernames or passwords for students, parents, teachers, and admins.\n\n**2. Core Popup Modals & How to Trigger Them:**\n• **Add Student Modal** (Trigger: Click \"+ Add Student\" on the Students tab): Enroll a new student and auto-generate login credentials (Username: LRN, Default Password: `password123`).\n• **Add Teacher Modal** (Trigger: Click \"+ Add Teacher\" on the Teachers tab): Add a new faculty member.\n• **Add Event Modal** (Trigger: Click \"+ Add Event\" on the Calendar tab): Post calendar events/announcements.\n• **Compare Year Modal** (Trigger: Click \"Compare Year\" dropdown on the Dashboard tab): View side-by-side comparisons of different school years.\n• **S.Y. 2020-2027 Export/Import Modal** (Trigger: Click \"S.Y. 2020-2027 Export/Import\" button): Backup or restore the entire database using Excel files.\n• **Classroom Size Modal** (Trigger: Click \"Classroom Size\" button on the Dashboard tab): Visualizes student-teacher ratios (target 33:1) and classroom capacity warnings.\n• **Edit Census Stats Modal** (Trigger: Click the \"Edit Stats\" button on the Dashboard card): Manually adjust baseline statistics for enrollment adjustments.\n\n💡 **Tip**: If you want instructions for the Teacher or Student/Parent dashboard instead, ask me: \"How do I use the teacher dashboard?\" or \"How do I use the student dashboard?\" 🐾\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\"",
+      "timestamp": "2026-05-26T05:16:00.980Z"
+    },
+    {
+      "userMessage": "how to use the teacher dashboard",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).\n\n---\n🧠 *Bella recalls:* \"all in the admin dashboard\", \"teacher sarah is in room 101\"",
+      "timestamp": "2026-05-26T05:21:53.632Z"
+    },
+    {
+      "userMessage": "how do we use the learning plan, exams, leaderboard, and student roster?",
+      "bellaResponse": "*ears perk up* 🐱✨ Ooh! I just learned something new!\n\n🧠 **\"ing plan, exams, leaderboard, and student roster\"**\n📁 Category: school\n\nI'll remember this forever! You can ask me about it anytime. Teach me more~ *purrs* 🐾",
+      "timestamp": "2026-05-26T05:23:05.527Z"
+    },
+    {
+      "userMessage": "how do we use the lesson plan, exams, leaderboard, and student roster?",
+      "bellaResponse": "🐱 **HOW TO USE THE STUDENT/PARENT DASHBOARD**\n\nThis dashboard is designed for students and parents to view student performance and records. Here is a detailed breakdown of the features available:\n\n• **Dashboard / Overview**: Shows the student's adviser details, academic status card, a list of subject proficiency cards (color-coded), and upcoming calendar events.\n• **Grades / Academics**: Access detailed quarterly subject grades (Q1 to Q4) for Math, Science, English, Filipino, MAPEH, and Makabayan. Displays final averages and visual indicators (Passed/Failed).\n• **Attendance**: Displays an interactive monthly attendance calendar highlighting present, absent, or late days.\n• **Achievements**: View a list of certificates, medals, and academic awards earned.\n• **Enrollment**: Access official student profile information (LRN, grade level, section, and enrolled dates).\n• **Payments**: Financial records detailing school fees, tuition summaries, and payment history.\n• **Medical / Health**: Digital clinic card detailing physical growth (height, weight), vaccination records, dental checkups, and consultation logs.\n• **Report Card**: View, request, and print official report cards.\n• **Help / Support**: Portal user guide, FAQs, and contact forms for administrative assistance.\n\n*purrs* Let me know if you want me to navigate you to any of these tabs, nya~! 🐾\n\n---\n🧠 *Bella recalls:* \"ing plan, exams, leaderboard, and student roster\", \"can you guide where the student is\", \"ing plan\"",
+      "timestamp": "2026-05-26T05:23:55.234Z"
+    },
+    {
+      "userMessage": "how do we use the lesson plan, exams, leaderboard, and student roster?",
+      "bellaResponse": "🐱 **HOW TO USE THE STUDENT/PARENT DASHBOARD**\n\nThis dashboard is designed for students and parents to view student performance and records. Here is a detailed breakdown of the features available:\n\n• **Dashboard / Overview**: Shows the student's adviser details, academic status card, a list of subject proficiency cards (color-coded), and upcoming calendar events.\n• **Grades / Academics**: Access detailed quarterly subject grades (Q1 to Q4) for Math, Science, English, Filipino, MAPEH, and Makabayan. Displays final averages and visual indicators (Passed/Failed).\n• **Attendance**: Displays an interactive monthly attendance calendar highlighting present, absent, or late days.\n• **Achievements**: View a list of certificates, medals, and academic awards earned.\n• **Enrollment**: Access official student profile information (LRN, grade level, section, and enrolled dates).\n• **Payments**: Financial records detailing school fees, tuition summaries, and payment history.\n• **Medical / Health**: Digital clinic card detailing physical growth (height, weight), vaccination records, dental checkups, and consultation logs.\n• **Report Card**: View, request, and print official report cards.\n• **Help / Support**: Portal user guide, FAQs, and contact forms for administrative assistance.\n\n*purrs* Let me know if you want me to navigate you to any of these tabs, nya~! 🐾\n\n---\n🧠 *Bella recalls:* \"ing plan, exams, leaderboard, and student roster\", \"can you guide where the student is\", \"ing plan\"",
+      "timestamp": "2026-05-26T05:40:58.930Z"
+    },
+    {
+      "userMessage": "Are there any problems or warnings in our school data?",
+      "bellaResponse": "*ears twitch* 🐱 Ooh, I just absorbed that into my memory!\n\n🧠 Learned: **\"Are there any problems or warnings in our school data?\"**\n\nKeep talking to me — I learn from everything you tell me! 🐾",
+      "timestamp": "2026-05-26T09:33:49.428Z"
+    },
+    {
+      "userMessage": "anomalies",
+      "bellaResponse": "*tilts head* 🐱 I'm not quite sure how to answer that specific question, but I'm here as your school companion!\n\nYou can ask me about students, teachers, grades, dropouts, repeaters, or announcements. You can also tell me to navigate to any tab (like \"go to calendar\" or \"open analytics\")! 🐾",
+      "timestamp": "2026-05-26T09:34:09.417Z"
+    },
+    {
+      "userMessage": "warning",
+      "bellaResponse": "*tilts head* 🐱 I'm not quite sure how to answer that specific question, but I'm here as your school companion!\n\nYou can ask me about students, teachers, grades, dropouts, repeaters, or announcements. You can also tell me to navigate to any tab (like \"go to calendar\" or \"open analytics\")! 🐾\n\n---\n🧠 *Bella recalls:* \"Are there any problems or warnings in our school data?\"",
+      "timestamp": "2026-05-26T09:34:31.006Z"
+    },
+    {
+      "userMessage": "How many dropouts are there?",
+      "bellaResponse": "⚠️ For **S.Y. 2025-2026**:\n• Census data shows **5 dropout(s)**\n• Live database has **1** student(s) with \"Dropped\" status: Pedro Penduko\n\nDropout prevention is a priority — the school monitors attendance and provides counseling support.",
+      "timestamp": "2026-05-26T09:34:55.182Z"
+    },
+    {
+      "userMessage": "Tell me about the teachers",
+      "bellaResponse": "👩‍🏫 The school has **15 teachers** for S.Y. 2025-2026.\n\nRegistered teachers: Maria Santos, Ritch Nuguid, laine perez\n\nTeachers are assigned across 7 grade levels (Kinder to Grade 6).",
+      "timestamp": "2026-05-26T09:35:10.633Z"
+    },
+    {
+      "userMessage": "What is the average grade performance?",
+      "bellaResponse": "📈 Based on **7 students** in the database:\n• Overall grade average: **86.1%**\n• Subjects tracked: Math, Science, English, Filipino, MAPEH, Makabayan\n• Quarters: Q1 through Q4\n\nFor detailed breakdowns, check the Admin or Teacher dashboards! 📊",
+      "timestamp": "2026-05-26T09:35:26.680Z"
+    }
+  ]
+}

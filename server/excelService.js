@@ -11,6 +11,7 @@ class ExcelService {
     this._fileWatcher = null;
     this._reloadDebounce = null;
     this.lastLoadedMtime = 0;
+    this.baselineSchoolYears = {};
     this.db = {
       users: [
         { id: 'A001', name: 'Admin', role: 'Admin', username: 'admin', password: 'password123' },
@@ -109,6 +110,91 @@ class ExcelService {
   getDataVersion() {
     this._checkReload();
     return this.dataVersion;
+  }
+
+  getAdjustments(gradeLevel) {
+    const baselineStudents = {
+      'S201': { gradeLevel: 'Grade 1', status: 'Enrolled' },
+      'S202': { gradeLevel: 'Grade 1', status: 'Enrolled' },
+      'S203': { gradeLevel: 'Grade 1', status: 'Dropped' }
+    };
+
+    let enrollAdj = 0;
+    let dropoutAdj = 0;
+
+    const currentStudents = this.db.students || [];
+
+    // 1. Check baseline students who still exist or were deleted/modified
+    for (const [id, baseInfo] of Object.entries(baselineStudents)) {
+      const current = currentStudents.find(s => String(s.id) === id);
+      const baseGrade = baseInfo.gradeLevel.toLowerCase();
+      const targetGrade = gradeLevel.toLowerCase();
+
+      if (!current) {
+        // Baseline student was deleted!
+        if (baseGrade === targetGrade) {
+          if (baseInfo.status.toLowerCase() === 'enrolled') {
+            enrollAdj -= 1;
+          } else if (baseInfo.status.toLowerCase() === 'dropped') {
+            dropoutAdj -= 1;
+          }
+        }
+      } else {
+        const currGrade = String(current.gradeLevel || '').toLowerCase();
+        const baseStatus = baseInfo.status.toLowerCase();
+        const currStatus = String(current.status || '').toLowerCase();
+
+        // Check if grade level changed
+        if (baseGrade === targetGrade && currGrade !== targetGrade) {
+          // Left this grade level
+          if (baseStatus === 'enrolled') {
+            enrollAdj -= 1;
+          } else if (baseStatus === 'dropped') {
+            dropoutAdj -= 1;
+          }
+        }
+        if (currGrade === targetGrade && baseGrade !== targetGrade) {
+          // Entered this grade level from another
+          if (currStatus === 'enrolled' || currStatus === 'active') {
+            enrollAdj += 1;
+          } else if (currStatus === 'dropped') {
+            dropoutAdj += 1;
+          }
+        }
+        
+        // If they remained in this grade level, check if status changed
+        if (baseGrade === targetGrade && currGrade === targetGrade) {
+          if (baseStatus !== currStatus) {
+            if (baseStatus === 'enrolled' && currStatus === 'dropped') {
+              enrollAdj -= 1;
+              dropoutAdj += 1;
+            } else if (baseStatus === 'dropped' && (currStatus === 'enrolled' || currStatus === 'active')) {
+              enrollAdj += 1;
+              dropoutAdj -= 1;
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Check new students (not in baseline)
+    for (const student of currentStudents) {
+      if (!baselineStudents[String(student.id)]) {
+        const currGrade = String(student.gradeLevel || '').toLowerCase();
+        const targetGrade = gradeLevel.toLowerCase();
+        const currStatus = String(student.status || '').toLowerCase();
+
+        if (currGrade === targetGrade) {
+          if (currStatus === 'enrolled' || currStatus === 'active' || currStatus === '') {
+            enrollAdj += 1;
+          } else if (currStatus === 'dropped') {
+            dropoutAdj += 1;
+          }
+        }
+      }
+    }
+
+    return { enrollAdj, dropoutAdj };
   }
 
   loadData() {
@@ -251,6 +337,8 @@ class ExcelService {
           section: sec || '',
           status: s.status,
           parentName: s.parentName || '',
+          parentPhone: s.parentPhone || '',
+          address: s.address || '',
           grades
         };
       });
@@ -262,21 +350,130 @@ class ExcelService {
       this.db.announcements = xlsx.utils.sheet_to_json(annSheet);
     }
 
-    // Set the "current" year data as the default (most recent)
-    const yearKeys = Object.keys(schoolYears).sort().reverse();
-    if (yearKeys.length > 0) {
-      const latest = schoolYears[yearKeys[0]];
-      this.db.classrooms = latest.classrooms;
-      
-      // Update high level metrics to match the actual students database if it has data
-      if (this.db.students.length > 0) {
-        this.recalculateSummaries();
-      } else {
-        this.db.schoolData = {
-          totalStudents: latest.totalStudents,
-          activeTeachers: latest.totalTeachers,
-        };
+    // Handle Baseline_Census sheet loading/parsing
+    let baselineSchoolYears = {};
+    if (sheetNames.includes('Baseline_Census')) {
+      const baselineSheet = this.workbook.Sheets['Baseline_Census'];
+      const rawBaselineData = xlsx.utils.sheet_to_json(baselineSheet, { header: 1 });
+      let baselineCurrentSY = null;
+      let baselineParsingGrades = false;
+
+      for (let i = 0; i < rawBaselineData.length; i++) {
+        const row = rawBaselineData[i];
+        if (!row || row.length === 0) {
+          baselineParsingGrades = false;
+          continue;
+        }
+
+        const firstCell = String(row[0] || '').trim();
+
+        if (firstCell.startsWith('S.Y.')) {
+          baselineCurrentSY = firstCell;
+          baselineSchoolYears[baselineCurrentSY] = {
+            schoolYear: baselineCurrentSY,
+            classrooms: [],
+            totalStudents: 0,
+            totalRepeaters: 0,
+            totalDropouts: 0,
+            totalTeachers: 0,
+            totalSeats: 0
+          };
+          continue;
+        }
+
+        if (firstCell === 'GRADE LEVEL' && baselineCurrentSY) {
+          baselineParsingGrades = true;
+          continue;
+        }
+
+        if (baselineParsingGrades && baselineCurrentSY) {
+          if (firstCell === 'TOTAL') {
+            baselineSchoolYears[baselineCurrentSY].totalStudents = Number(row[1]) || 0;
+            baselineSchoolYears[baselineCurrentSY].totalRepeaters = Number(row[2]) || 0;
+            baselineSchoolYears[baselineCurrentSY].totalDropouts = Number(row[3]) || 0;
+            baselineParsingGrades = false;
+            continue;
+          }
+          if (firstCell === 'RELIEVING TEACHER') {
+            continue;
+          }
+          if (firstCell) {
+            const normalizedGrade = firstCell.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+            const GRADE_SECTIONS = {
+              'Kinder': 'Section A',
+              'Grade 1': 'Mabini',
+              'Grade 2': 'Rizal',
+              'Grade 3': 'Del Pilar',
+              'Grade 4': 'Aguinaldo',
+              'Grade 5': 'Gomez',
+              'Grade 6': 'Sampaguita'
+            };
+            const defaultSection = GRADE_SECTIONS[normalizedGrade] || normalizedGrade;
+
+            baselineSchoolYears[baselineCurrentSY].classrooms.push({
+              gradeLevel: normalizedGrade,
+              enrollment: Number(row[1]) || 0,
+              repeaters: Number(row[2]) || 0,
+              dropouts: Number(row[3]) || 0,
+              section: defaultSection,
+              classrooms: String(row[4] || ''),
+              seats: String(row[5] || ''),
+              teachers: Number(row[6]) || 0
+            });
+          }
+        }
       }
+      this.baselineSchoolYears = baselineSchoolYears;
+    }
+
+    // Set the "current" year data as the default (most recent) and initialize baselines if not present
+    const yearKeys = Object.keys(this.db.schoolYears).sort().reverse();
+    if (yearKeys.length > 0) {
+      const latestYear = yearKeys[0];
+      const syData = this.db.schoolYears[latestYear];
+      this.db.classrooms = syData.classrooms;
+
+      if (!this.baselineSchoolYears[latestYear]) {
+        console.log(`[Baseline Sync] Initializing baseline for ${latestYear} from sheet values...`);
+        this.baselineSchoolYears[latestYear] = {
+          schoolYear: latestYear,
+          classrooms: syData.classrooms.map(room => {
+            const adj = this.getAdjustments(room.gradeLevel);
+            return {
+              gradeLevel: room.gradeLevel,
+              enrollment: room.enrollment - adj.enrollAdj,
+              repeaters: room.repeaters,
+              dropouts: room.dropouts - adj.dropoutAdj,
+              section: room.section,
+              classrooms: room.classrooms,
+              seats: room.seats,
+              teachers: room.teachers
+            };
+          })
+        };
+      } else {
+        // Check for manual user edits to baseline in VALDEZ ES sheet
+        const baseSY = this.baselineSchoolYears[latestYear];
+        syData.classrooms.forEach(room => {
+          const baseRoom = baseSY.classrooms.find(r => r.gradeLevel === room.gradeLevel);
+          if (baseRoom) {
+            const adj = this.getAdjustments(room.gradeLevel);
+            const expectedEnrollment = baseRoom.enrollment + adj.enrollAdj;
+            const expectedDropouts = baseRoom.dropouts + adj.dropoutAdj;
+
+            if (room.enrollment !== expectedEnrollment) {
+              console.log(`[Baseline Override] Manual census enrollment change detected for ${room.gradeLevel}. Original: ${expectedEnrollment}, New: ${room.enrollment}. Updating baseline.`);
+              baseRoom.enrollment = room.enrollment - adj.enrollAdj;
+            }
+            if (room.dropouts !== expectedDropouts) {
+              console.log(`[Baseline Override] Manual census dropouts change detected for ${room.gradeLevel}. Original: ${expectedDropouts}, New: ${room.dropouts}. Updating baseline.`);
+              baseRoom.dropouts = room.dropouts - adj.dropoutAdj;
+            }
+          }
+        });
+      }
+
+      this.recalculateSummaries();
     }
 
     console.log(`Excel data loaded: ${yearKeys.length} school years parsed. ${this.db.students.length} students loaded.`);
@@ -287,17 +484,24 @@ class ExcelService {
     if (yearKeys.length === 0) return;
     const currentSY = yearKeys[0];
     const syData = this.db.schoolYears[currentSY];
+    const baseSY = this.baselineSchoolYears[currentSY];
+    if (!baseSY) return;
     
-    // Calculate total students, repeaters, dropouts as the sum of classrooms parsed from Excel
     let totalStudents = 0;
     let totalRepeaters = 0;
     let totalDropouts = 0;
     
-    for (const room of syData.classrooms) {
+    syData.classrooms.forEach(room => {
+      const baseRoom = baseSY.classrooms.find(r => r.gradeLevel === room.gradeLevel);
+      if (baseRoom) {
+        const adj = this.getAdjustments(room.gradeLevel);
+        room.enrollment = baseRoom.enrollment + adj.enrollAdj;
+        room.dropouts = baseRoom.dropouts + adj.dropoutAdj;
+      }
       totalStudents += room.enrollment || 0;
       totalRepeaters += room.repeaters || 0;
       totalDropouts += room.dropouts || 0;
-    }
+    });
     
     syData.totalStudents = totalStudents;
     syData.totalRepeaters = totalRepeaters;
@@ -311,102 +515,269 @@ class ExcelService {
     this.db.schoolData.activeTeachers = syData.totalTeachers;
   }
 
+  generateWorkbook(requestedYear = null) {
+    const workbook = xlsx.utils.book_new();
+    const db = this.getDb();
+    const yearKeys = Object.keys(db.schoolYears).sort().reverse();
+    const TARGET_YEARS = requestedYear ? [requestedYear] : yearKeys;
+    const GRADE_LEVELS = ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+
+    // --- Helper function to format summary sheets (merges and heights) ---
+    const formatSummarySheet = (sheet, rows) => {
+      const merges = [];
+      const heights = [];
+      
+      merges.push({ s: { r: 2, c: 0 }, e: { r: 2, c: 6 } });
+      merges.push({ s: { r: 3, c: 0 }, e: { r: 3, c: 6 } });
+      merges.push({ s: { r: 4, c: 0 }, e: { r: 4, c: 6 } });
+      
+      for (let r = 0; r < rows.length; r++) {
+        const row = rows[r];
+        if (r >= 2 && r <= 4) {
+          heights.push({ hpt: 26 });
+        } else if (row && row.length === 1 && String(row[0]).startsWith('S.Y.')) {
+          heights.push({ hpt: 24 });
+          merges.push({ s: { r, c: 0 }, e: { r, c: 6 } });
+        } else if (row && row[0] === 'GRADE LEVEL') {
+          heights.push({ hpt: 22 });
+        } else if (row && row[0] === 'TOTAL') {
+          heights.push({ hpt: 20 });
+        } else if (row && row[0] === 'RELIEVING TEACHER') {
+          heights.push({ hpt: 18 });
+        } else {
+          heights.push({ hpt: 17 });
+        }
+      }
+      sheet['!merges'] = merges;
+      sheet['!rows'] = heights;
+      sheet['!cols'] = [
+        { wch: 22 }, // Grade Level
+        { wch: 18 }, // BOSY Enrollment
+        { wch: 22 }, // Number of Repeaters
+        { wch: 22 }, // Number of Dropouts
+        { wch: 32 }, // Number of Functional Classrooms
+        { wch: 18 }, // Number of Seats
+        { wch: 20 }  // Number of Teachers
+      ];
+    };
+
+    const formatTableSheet = (sheet, rawDataLength) => {
+      const heights = [{ hpt: 22 }];
+      for (let i = 0; i < rawDataLength; i++) {
+        heights.push({ hpt: 18 });
+      }
+      sheet['!rows'] = heights;
+    };
+
+    // 1. Generate Summary Sheet
+    const summaryRows = [];
+    summaryRows.push([]);
+    summaryRows.push([]);
+    summaryRows.push([ 'SCHOOLS DIVISION OF PAMPANGA' ]);
+    summaryRows.push([ 'VALDEZ ELEMENTARY SCHOOL' ]);
+    summaryRows.push([ 'FLORIDABLANCA, PAMPANGA' ]);
+    summaryRows.push([]);
+
+    for (const year of TARGET_YEARS) {
+      const syData = db.schoolYears[year];
+      if (!syData) continue;
+      summaryRows.push([ syData.schoolYear ]);
+      summaryRows.push([
+        'GRADE LEVEL',
+        'BOSY ENROLLMENT',
+        'NUMBER OF REPEATERS',
+        'NUMBER OF DROPOUTS',
+        'NUMBER OF FUNCTIONAL CLASSROOMS',
+        'NUMBER OF SEATS',
+        'NUMBER OF TEACHERS'
+      ]);
+
+      for (const room of syData.classrooms) {
+        summaryRows.push([
+          room.gradeLevel.toUpperCase(),
+          room.enrollment,
+          room.repeaters,
+          room.dropouts,
+          room.classrooms,
+          room.seats,
+          room.teachers
+        ]);
+      }
+
+      const relieving = syData.totalTeachers !== undefined 
+        ? Math.max(0, syData.totalTeachers - syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0)) 
+        : (syData.schoolYear === 'S.Y. 2021-2022' ? 0 : 1);
+        
+      summaryRows.push([ 'RELIEVING TEACHER', '', '', '', '', '', relieving ]);
+      summaryRows.push([
+        'TOTAL',
+        syData.totalStudents,
+        syData.totalRepeaters,
+        syData.totalDropouts,
+        syData.totalClassrooms || 15,
+        syData.totalSeats || 461,
+        syData.totalTeachers
+      ]);
+      summaryRows.push([]);
+    }
+
+    const summarySheet = xlsx.utils.aoa_to_sheet(summaryRows);
+    formatSummarySheet(summarySheet, summaryRows);
+    const summarySheetName = requestedYear ? requestedYear.replace('S.Y. ', 'SY ') : 'VALDEZ ES';
+    xlsx.utils.book_append_sheet(workbook, summarySheet, summarySheetName);
+
+    // 2. Generate 'Users' sheet
+    const usersSheet = xlsx.utils.json_to_sheet(db.users);
+    formatTableSheet(usersSheet, db.users.length);
+    usersSheet['!cols'] = [
+      { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 18 }
+    ];
+    xlsx.utils.book_append_sheet(workbook, usersSheet, 'Users');
+
+    // 3. Generate 'Students' sheet
+    const flatStudents = db.students.map(s => {
+      const flat = {
+        id: s.id,
+        lrn: s.lrn,
+        name: s.name,
+        gender: s.gender,
+        gradeLevel: s.gradeLevel,
+        section: s.section,
+        status: s.status,
+        parentName: s.parentName || '',
+        parentPhone: s.parentPhone || '',
+        address: s.address || ''
+      };
+      const subjects = ['Math', 'Science', 'English', 'Filipino', 'MAPEH', 'Makabayan'];
+      const quarters = ['q1', 'q2', 'q3', 'q4'];
+      
+      for (const subj of subjects) {
+        for (const q of quarters) {
+          const val = s.grades?.[subj]?.[q];
+          flat[`${subj}_${q.toUpperCase()}`] = val !== null && val !== undefined ? val : '';
+        }
+      }
+      return flat;
+    });
+    const studentsSheet = xlsx.utils.json_to_sheet(flatStudents);
+    formatTableSheet(studentsSheet, flatStudents.length);
+    studentsSheet['!cols'] = [
+      { wch: 10 }, { wch: 16 }, { wch: 22 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 22 },
+      ...Array(24).fill({ wch: 12 })
+    ];
+    xlsx.utils.book_append_sheet(workbook, studentsSheet, 'Students');
+
+    // 4. Generate 'Announcements' sheet
+    const announcementsSheet = xlsx.utils.json_to_sheet(db.announcements);
+    formatTableSheet(announcementsSheet, db.announcements.length);
+    announcementsSheet['!cols'] = [
+      { wch: 10 }, { wch: 28 }, { wch: 15 }, { wch: 50 }, { wch: 15 }
+    ];
+    xlsx.utils.book_append_sheet(workbook, announcementsSheet, 'Announcements');
+
+    // 5. Generate 'Baseline_Census' sheet
+    const baselineRows = [];
+    baselineRows.push([]);
+    baselineRows.push([]);
+    baselineRows.push([ 'SCHOOLS DIVISION OF PAMPANGA' ]);
+    baselineRows.push([ 'VALDEZ ELEMENTARY SCHOOL' ]);
+    baselineRows.push([ 'FLORIDABLANCA, PAMPANGA' ]);
+    baselineRows.push([]);
+
+    for (const year of yearKeys) {
+      const syData = this.baselineSchoolYears[year] || db.schoolYears[year];
+      if (!syData) continue;
+      baselineRows.push([ syData.schoolYear ]);
+      baselineRows.push([
+        'GRADE LEVEL',
+        'BOSY ENROLLMENT',
+        'NUMBER OF REPEATERS',
+        'NUMBER OF DROPOUTS',
+        'NUMBER OF FUNCTIONAL CLASSROOMS',
+        'NUMBER OF SEATS',
+        'NUMBER OF TEACHERS'
+      ]);
+
+      for (const room of syData.classrooms) {
+        baselineRows.push([
+          room.gradeLevel.toUpperCase(),
+          room.enrollment,
+          room.repeaters,
+          room.dropouts,
+          room.classrooms,
+          room.seats,
+          room.teachers
+        ]);
+      }
+
+      const relieving = syData.totalTeachers !== undefined 
+        ? Math.max(0, syData.totalTeachers - syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0)) 
+        : (syData.schoolYear === 'S.Y. 2021-2022' ? 0 : 1);
+        
+      baselineRows.push([ 'RELIEVING TEACHER', '', '', '', '', '', relieving ]);
+      
+      const totalS = syData.classrooms.reduce((sum, r) => sum + (r.enrollment || 0), 0);
+      const totalR = syData.classrooms.reduce((sum, r) => sum + (r.repeaters || 0), 0);
+      const totalD = syData.classrooms.reduce((sum, r) => sum + (r.dropouts || 0), 0);
+      
+      baselineRows.push([
+        'TOTAL',
+        totalS,
+        totalR,
+        totalD,
+        syData.totalClassrooms || 15,
+        syData.totalSeats || 461,
+        syData.totalTeachers || (syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0) + relieving)
+      ]);
+      baselineRows.push([]);
+    }
+
+    const baselineSheet = xlsx.utils.aoa_to_sheet(baselineRows);
+    formatSummarySheet(baselineSheet, baselineRows);
+    xlsx.utils.book_append_sheet(workbook, baselineSheet, 'Baseline_Census');
+
+    // 6. Generate 'Enrollment Trends' sheet (for analytics download)
+    const trendRows = [['School Year', 'Total Students', 'Total Repeaters', 'Total Dropouts', 'Total Teachers']];
+    for (const sy of TARGET_YEARS) {
+      const syData = db.schoolYears[sy];
+      if (!syData) continue;
+      trendRows.push([
+        sy,
+        syData.totalStudents || 0,
+        syData.totalRepeaters || 0,
+        syData.totalDropouts || 0,
+        syData.totalTeachers || 0
+      ]);
+    }
+    const trendSheet = xlsx.utils.aoa_to_sheet(trendRows);
+    formatTableSheet(trendSheet, trendRows.length - 1);
+    trendSheet['!cols'] = [{ wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
+    xlsx.utils.book_append_sheet(workbook, trendSheet, 'Enrollment Trends');
+
+    // 7. Generate 'Grade Breakdown' sheet
+    const gradeRows = [['School Year', ...GRADE_LEVELS]];
+    for (const sy of TARGET_YEARS) {
+      const syData = db.schoolYears[sy];
+      if (!syData) continue;
+      const row = [sy];
+      for (const grade of GRADE_LEVELS) {
+        const cls = syData.classrooms?.find(c => c.gradeLevel === grade);
+        row.push(cls ? cls.enrollment || 0 : 0);
+      }
+      gradeRows.push(row);
+    }
+    const gradeSheet = xlsx.utils.aoa_to_sheet(gradeRows);
+    formatTableSheet(gradeSheet, gradeRows.length - 1);
+    gradeSheet['!cols'] = [{ wch: 20 }, ...GRADE_LEVELS.map(() => ({ wch: 12 }))];
+    xlsx.utils.book_append_sheet(workbook, gradeSheet, 'Grade Breakdown');
+
+    return workbook;
+  }
+
   saveData() {
     try {
       this.recalculateSummaries();
-      const workbook = xlsx.utils.book_new();
-
-      // 1. Re-generate 'VALDEZ ES' sheet content
-      const summaryRows = [];
-      summaryRows.push([]);
-      summaryRows.push([]);
-      summaryRows.push([ '   SCHOOLS DIVISION OF PAMPANGA' ]);
-      summaryRows.push([ '    VALDEZ ELEMENTARY SCHOOL' ]);
-      summaryRows.push([ '    FLORIDABLANCA, PAMPANGA' ]);
-      summaryRows.push([]);
-
-      // Sort school years descending to match original excel file
-      const yearKeys = Object.keys(this.db.schoolYears).sort().reverse();
-      for (const year of yearKeys) {
-        const syData = this.db.schoolYears[year];
-        summaryRows.push([ syData.schoolYear ]);
-        summaryRows.push([
-          'GRADE LEVEL',
-          'BOSY ENROLLMENT',
-          'NUMBER OF REPEATERS',
-          'NUMBER OF DROPOUTS',
-          'NUMBER OF FUNCTIONAL CLASSROOMS',
-          'NUMBER OF SEATS',
-          'NUMBER OF TEACHERS'
-        ]);
-
-        for (const room of syData.classrooms) {
-          summaryRows.push([
-            room.gradeLevel.toUpperCase(),
-            room.enrollment,
-            room.repeaters,
-            room.dropouts,
-            room.classrooms,
-            room.seats,
-            room.teachers
-          ]);
-        }
-
-        const relieving = syData.totalTeachers !== undefined 
-          ? Math.max(0, syData.totalTeachers - syData.classrooms.reduce((sum, r) => sum + (r.teachers || 0), 0)) 
-          : (syData.schoolYear === 'S.Y. 2021-2022' ? 0 : 1);
-          
-        summaryRows.push([ 'RELIEVING TEACHER', '', '', '', '', '', relieving ]);
-        summaryRows.push([
-          'TOTAL',
-          syData.totalStudents,
-          syData.totalRepeaters,
-          syData.totalDropouts,
-          syData.totalClassrooms || 15,
-          syData.totalSeats || 461,
-          syData.totalTeachers
-        ]);
-        summaryRows.push([]);
-      }
-
-      const summarySheet = xlsx.utils.aoa_to_sheet(summaryRows);
-      xlsx.utils.book_append_sheet(workbook, summarySheet, 'VALDEZ ES');
-
-      // 2. Generate 'Users' sheet
-      const usersSheet = xlsx.utils.json_to_sheet(this.db.users);
-      xlsx.utils.book_append_sheet(workbook, usersSheet, 'Users');
-
-      // 3. Generate 'Students' sheet (flattening the nested grades object)
-      const flatStudents = this.db.students.map(s => {
-        const flat = {
-          id: s.id,
-          lrn: s.lrn,
-          name: s.name,
-          gender: s.gender,
-          gradeLevel: s.gradeLevel,
-          section: s.section,
-          status: s.status,
-          parentName: s.parentName || ''
-        };
-        const subjects = ['Math', 'Science', 'English', 'Filipino', 'MAPEH', 'Makabayan'];
-        const quarters = ['q1', 'q2', 'q3', 'q4'];
-        
-        for (const subj of subjects) {
-          for (const q of quarters) {
-            const val = s.grades?.[subj]?.[q];
-            flat[`${subj}_${q.toUpperCase()}`] = val !== null && val !== undefined ? val : '';
-          }
-        }
-        return flat;
-      });
-      const studentsSheet = xlsx.utils.json_to_sheet(flatStudents);
-      xlsx.utils.book_append_sheet(workbook, studentsSheet, 'Students');
-
-      // 4. Generate 'Announcements' sheet
-      const announcementsSheet = xlsx.utils.json_to_sheet(this.db.announcements);
-      xlsx.utils.book_append_sheet(workbook, announcementsSheet, 'Announcements');
-
-      // Write workbook back to disk
+      const workbook = this.generateWorkbook();
       xlsx.writeFile(workbook, EXCEL_PATH);
       console.log(`Excel database successfully saved to ${EXCEL_PATH}`);
     } catch (error) {
@@ -436,14 +807,22 @@ class ExcelService {
 
   getDb() {
     this._checkReload();
+    this.recalculateSummaries();
     return this.db;
   }
 
   importFromBuffer(buffer) {
     try {
-      fs.writeFileSync(EXCEL_PATH, buffer);
-      this.loadData();
-      return { success: true };
+      const workbook = xlsx.read(buffer, { type: 'buffer' });
+      const sheetNames = workbook.SheetNames;
+      
+      // If it contains Users and Students sheets, it's a full or partial database import
+      if (sheetNames.includes('Users') && sheetNames.includes('Students')) {
+        fs.writeFileSync(EXCEL_PATH, buffer);
+        this.loadData();
+        return { success: true, fullImport: true };
+      }
+      return { success: false, code: 'NOT_FULL_DB', error: 'Uploaded file is not a full database backup.' };
     } catch (error) {
       console.error('Import failed:', error);
       return { success: false, error: error.message };

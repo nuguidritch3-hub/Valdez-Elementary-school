@@ -1,0 +1,308 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset="utf-8">
+  <title>Valdez Elementary School Portal User Manual</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.6; font-size: 11pt; color: #1e293b; padding: 20px; }
+    h1 { color: #1e3a8a; font-size: 20pt; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-top: 30px; margin-bottom: 12px; font-weight: bold; }
+    h2 { color: #2563eb; font-size: 16pt; margin-top: 25px; margin-bottom: 10px; font-weight: bold; }
+    h3 { color: #0f766e; font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
+    p { margin-bottom: 12px; text-align: justify; }
+    ul, ol { margin-top: 5px; margin-bottom: 12px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .strong-term { font-weight: bold; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; font-size: 10.5pt; }
+    th { background-color: #e2e8f0; font-weight: bold; border: 1px solid #94a3b8; padding: 10px; text-align: left; color: #1e293b; }
+    td { border: 1px solid #cbd5e1; padding: 10px; vertical-align: top; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .note { background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #14532d; border-radius: 4px; }
+    .warning-note { background-color: #fff7ed; border-left: 4px solid #ea580c; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #7c2d12; border-radius: 4px; }
+    .title-page { text-align: center; padding-top: 120px; padding-bottom: 120px; }
+    .title { font-size: 28pt; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; }
+    .subtitle { font-size: 16pt; color: #475569; margin-bottom: 60px; font-style: italic; }
+    .school-name { font-size: 13pt; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+    .school-loc { font-size: 11pt; color: #64748b; margin-bottom: 40px; }
+    .info { font-size: 10pt; color: #64748b; margin-top: 100px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+  <!-- TITLE PAGE -->
+  <div class="title-page">
+    <div class="title">VALDEZ ELEMENTARY SCHOOL PORTAL</div>
+    <div class="subtitle">Comprehensive System User Manual & Administrator Guide</div>
+    <div class="school-name">Valdez Elementary School</div>
+    <div class="school-loc">Floridablanca, Pampanga</div>
+    <div class="info">
+      Document Version: 1.0<br>
+      Published: May 2026<br>
+      System Target: S.Y. 2020-2027 Roster Databases
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- TABLE OF CONTENTS (Conceptual representation for Word) -->
+  <h1>TABLE OF CONTENTS</h1>
+  <ol>
+    <li><a href="#introduction">Introduction & System Overview</a></li>
+    <li><a href="#running-project">Installation & How to Run the Project</a></li>
+    <li><a href="#credentials">System Accounts & Default Login Credentials</a></li>
+    <li><a href="#admin-portal">Administrator Portal & Dashboard Guide</a></li>
+    <li><a href="#teacher-portal">Teacher Portal & Grade Management</a></li>
+    <li><a href="#student-portal">Student & Parent Academic Portal</a></li>
+    <li><a href="#technical">Technical Details & Data Synchronization</a></li>
+  </ol>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 1 -->
+  <a name="introduction"></a>
+  <h1>1. INTRODUCTION & SYSTEM OVERVIEW</h1>
+  <p>The Valdez Elementary School Portal is an integrated management platform designed to streamline school operations, automate student record management, facilitate parent/student academic tracking, and improve teacher-administrative workflows. The system is built on a React and Vite frontend framework backed by an Express Node.js server. A key feature of this project is its live database synchronization with a local Microsoft Excel spreadsheet (database.xlsx), making data administration accessible to school staff with minimal technical overhead.</p>
+  
+  <h3>Key Architectural Features:</h3>
+  <ul>
+    <li><span class="strong-term">Node.js Server:</span> Express Node.js backend serves dynamic REST APIs and manages spreadsheet reading/writing.</li>
+    <li><span class="strong-term">React Frontend:</span> React + Vite handles the web client interfaces using Vanilla CSS, ensuring rich styling, responsiveness, and premium dark/light mode aesthetics.</li>
+    <li><span class="strong-term">Excel Database Synchronization:</span> Located in `server/data/database.xlsx`, the spreadsheet is the primary database. Any change in the Excel sheet reloads automatically in the web client, and any administrative update in the portal is written back directly to the Excel file.</li>
+    <li><span class="strong-term">AI Companion Assistant:</span> Bella, an interactive animated cat chatbot mascot, is integrated to provide real-time Q&A on school metrics, using Gemini 1.5 Flash API with a localized fact-learning system.</li>
+  </ul>
+
+  <!-- SECTION 2 -->
+  <a name="running-project"></a>
+  <h1>2. INSTALLATION & HOW TO RUN THE PROJECT</h1>
+  <p>Follow these steps to set up and run the Valdez Elementary School Portal on a local computer:</p>
+  
+  <h2>Step 2.1: Verify Prerequisites</h2>
+  <p>Ensure that Node.js (version 18 or higher) and npm are installed on your computer. You can verify this by running the following commands in your command prompt or terminal:</p>
+  <ul>
+    <li><span class="strong-term">Node.js version check:</span> <code>node -v</code></li>
+    <li><span class="strong-term">npm version check:</span> <code>npm -v</code></li>
+  </ul>
+
+  <h2>Step 2.2: Extract / Navigate to Workspace</h2>
+  <p>Open your terminal, command line, or terminal in VS Code, and navigate to the project directory:</p>
+  <p style="font-family: Consolas, monospace; background-color: #f8fafc; padding: 8px; border: 1px dashed #cbd5e1;">cd /path/to/school-portal</p>
+
+  <h2>Step 2.3: Install Dependencies</h2>
+  <p>To install all frontend and backend dependencies, run:</p>
+  <p style="font-family: Consolas, monospace; background-color: #f8fafc; padding: 8px; border: 1px dashed #cbd5e1;">npm install</p>
+  <p>This command installs required packages, including Express, Multer, xlsx (SheetJS), React, React Router DOM, Recharts, and Lucide React icons.</p>
+
+  <h2>Step 2.4: Running the Servers</h2>
+  <p>The project requires running both the React frontend Vite development server and the Node.js Express server:</p>
+  <ul>
+    <li><span class="strong-term">Frontend Dev Server:</span> Run <code>npm run dev</code> in the root workspace folder. This compiles the React modules and launches the local web client interface at <code>http://localhost:5173</code>.</li>
+    <li><span class="strong-term">Backend API Server:</span> Run <code>npm run server</code> (or run <code>node server/index.js</code> directly) in the root workspace folder. This initiates the Express server listening on <code>http://localhost:5000</code>.</li>
+  </ul>
+  
+  <div class="note">
+    <strong>IMPORTANT NOTE:</strong> Both commands should run simultaneously. You can open two terminal windows or run them in background processes. In production, building is executed via <code>npm run build</code> and served from the <code>dist</code> directory by Node.js.
+  </div>
+
+  <!-- SECTION 3 -->
+  <a name="credentials"></a>
+  <h1>3. SYSTEM ACCOUNTS & DEFAULT LOGIN CREDENTIALS</h1>
+  <p>The portal regulates access through three roles. Users log in via the unified login page (http://localhost:5173/login). The following accounts are pre-configured in the `Users` sheet of the database spreadsheet:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Full Name</th>
+        <th>System Role</th>
+        <th>Username</th>
+        <th>Password</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>A001</td>
+        <td>Admin User</td>
+        <td><strong>Admin</strong></td>
+        <td>admin</td>
+        <td>password123</td>
+      </tr>
+      <tr>
+        <td>T101</td>
+        <td>Maria Santos</td>
+        <td><strong>Teacher</strong></td>
+        <td>teacher_maria</td>
+        <td>password123</td>
+      </tr>
+      <tr>
+        <td>T3243</td>
+        <td>Ritch Nuguid</td>
+        <td><strong>Teacher</strong></td>
+        <td>ritchnuguid</td>
+        <td>password123</td>
+      </tr>
+      <tr>
+        <td>S201</td>
+        <td>Juan Dela Cruz</td>
+        <td><strong>Student / Parent</strong></td>
+        <td>student_juan</td>
+        <td>password123</td>
+      </tr>
+      <tr>
+        <td>S1965_login</td>
+        <td>Eleanor Vance</td>
+        <td><strong>Student / Parent</strong></td>
+        <td>eleanorvance</td>
+        <td>password123</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Any new student or teacher registered via the portal's Admin interface will automatically have login accounts generated (e.g., student username format is their lowercase fullname with spaces removed and default password 'password123').</p>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 4 -->
+  <a name="admin-portal"></a>
+  <h1>4. ADMINISTRATOR PORTAL & DASHBOARD GUIDE</h1>
+  <p>The Admin Dashboard (http://localhost:5173/admin) is the operational control center of the portal, restricted to users with the 'Admin' role. It provides the following administrative tools:</p>
+  
+  <h2>4.1: Dashboard Statistics Overview</h2>
+  <p>Upon login, administrators see cards summarizing primary institutional metrics. These values are recalculated dynamically from active database.xlsx records:</p>
+  <ul>
+    <li><span class="strong-term">Total Enrollment:</span> Displays the total number of students active in the currently selected school year.</li>
+    <li><span class="strong-term">Total Dropouts:</span> Tracks how many students are set to the 'Dropped' status, calculated in real-time.</li>
+    <li><span class="strong-term">Active Faculty:</span> Summarizes how many active teacher profiles are registered in the current year.</li>
+    <li><span class="strong-term">Infrastructure:</span> Summarizes repeaters and capacity statistics (total seats, functional classrooms).</li>
+    <li><span class="strong-term">School Year Selector:</span> Allows admins to toggle between school years (e.g. S.Y. 2025-2026, S.Y. 2021-2022) to review historical rosters, census metrics, and enrollment details.</li>
+  </ul>
+
+  <h2>4.2: School Year & Census Statistics Management</h2>
+  <p>Administrators can view and edit general class rosters, seat capacities, teacher assignments, and dropout ratios. Important buttons are:</p>
+  <ul>
+    <li><span class="strong-term">Edit Year Statistics:</span> Opens a modal containing a tabular list of grade levels (Kinder to Grade 6) with customizable counts for enrollment, repeaters, dropouts, classrooms count, seats, and teacher allocation. Modifying these and clicking 'Save Changes' pushes updates back to the Excel file.</li>
+    <li><span class="strong-term">Delete School Year:</span> Initiates a confirmation screen to remove a school year and all its classes from the system.</li>
+    <li><span class="strong-term">Compare Years:</span> Opens an extensive multi-year comparison dashboard. It draws line charts, bar graphs, and lists showing enrollment changes over time (2020-2027), showing if metrics grew or decreased, alongside monthly logs summarizing key events like typhoon shifts to modular learning or exams scheduling.</li>
+  </ul>
+
+  <h2>4.3: User, Student, and Faculty Rosters</h2>
+  <p>Administrators can maintain database tables of students and faculty members. In the Students and Faculty tabs, admins can:</p>
+  <ul>
+    <li><span class="strong-term">Add Student:</span> Registers a student's Name, Grade Level, Section, Gender, LRN (Learner Reference Number), and Parent Name. Submitting automatically generates parent login credentials.</li>
+    <li><span class="strong-term">Add Teacher:</span> Registers a faculty member with Name, Subject expertise, Assigned Grade/Section, phone, and email, generating login credentials.</li>
+    <li><span class="strong-term">Delete Records:</span> Allows deleting student or teacher records permanently from both the spreadsheet databases and the login authorization lists.</li>
+    <li><span class="strong-term">Update Student Status:</span> Admins can toggle a student's status between 'Enrolled' and 'Dropped' instantly. This updates the dashboard metrics automatically.</li>
+  </ul>
+
+  <h2>4.4: Spreadsheet Database Import / Export Synchronization</h2>
+  <p>To synchronize bulk Excel files or backup data, navigate to the Database Tool:</p>
+  <ul>
+    <li><span class="strong-term">Export Database:</span> Exports the active database including all school years, user logs, student lists, grades, announcements, and baseline figures into a standardized Excel workbook.</li>
+    <li><span class="strong-term">Download Template:</span> Downloads an empty, pre-formatted Excel template matching the DepEd spreadsheet standard.</li>
+    <li><span class="strong-term">Import Census File:</span> Allows uploading an edited school year census spreadsheet to update specific numbers on the portal instantly.</li>
+  </ul>
+
+  <h2>4.5: Bella AI Assistant Companion & Memory System</h2>
+  <p>Bella is an animated, cat-themed assistant displayed on the dashboard:</p>
+  <ul>
+    <li><span class="strong-term">AI Config (API Key):</span> Allows entering a custom Google Gemini API Key if the default key is missing or needs rotation.</li>
+    <li><span class="strong-term">Natural Language Q&A:</span> Bella parses school data in real-time to answer questions like: 'How many students are enrolled in Grade 1?' or 'What is our dropout rate?'.</li>
+    <li><span class="strong-term">Bella Learning Memory:</span> If you ask Bella to remember something (e.g. 'remember to audit Grade 4 next week'), she adds it to the persistent <code>bella_memory.json</code> file. You can recall memories or clear them using the 'Clear Memory' interface.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 5 -->
+  <a name="teacher-portal"></a>
+  <h1>5. TEACHER PORTAL & GRADE MANAGEMENT</h1>
+  <p>The Teacher Dashboard (http://localhost:5173/teacher/dashboard) is customized for faculty members. It automatically filters information to display details relevant to the teacher's assigned Grade and Section (e.g., Grade 1 - Mabini):</p>
+  
+  <h2>5.1: Learning Plan & Leaderboard</h2>
+  <p>The default tab displays advisee cards showing student names, genders, and enrollment status. Beside the cards, a class Leaderboard rankings list displays top-performing students calculated from their overall average grade across all subjects.</p>
+
+  <h2>5.2: Student Grades Management</h2>
+  <p>In the Students tab, teachers can access academic records:</p>
+  <ul>
+    <li><span class="strong-term">Editing Quarterly Grades:</span> Click any student name in the roster to pull up their complete grading sheet. The grades sheet splits academic assessment across Math, Science, English, Filipino, MAPEH, and Makabayan.</li>
+    <li><span class="strong-term">Inputs:</span> The table has inputs for Q1, Q2, Q3, and Q4 grades. Teachers can enter numbers (0-100) or clear cells if grades are not yet given.</li>
+    <li><span class="strong-term">Saving Grades:</span> Clicking 'Save Changes' triggers an API call that recalculates the student's average and rewrites the record directly in the <code>Students</code> sheet of the central Excel database. Pushing changes automatically updates student averages across other dashboards.</li>
+  </ul>
+
+  <h2>5.3: Exams Preparation Panel</h2>
+  <p>Teachers can organize exams in the Exams tab:</p>
+  <ul>
+    <li><span class="strong-term">Create Prepared Exam:</span> Clicking '+ Create Exam' opens a modal form asking for Exam Title, Scheduled Date, and Exam Type (Multiple Choice, Essay, Problem Solving, Mixed).</li>
+    <li><span class="strong-term">Exam List:</span> The created exam is listed in the classroom board, helping teachers plan and syllabus timelines.</li>
+  </ul>
+
+  <h2>5.4: Announcements & Calendar View</h2>
+  <p>The Calendar tab consolidates school announcements published by the Admin, along with a calendar widget showing scheduled events (sports events, Parent-Teacher meetings, holidays).</p>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 6 -->
+  <a name="student-portal"></a>
+  <h1>6. STUDENT & PARENT ACADEMIC PORTAL</h1>
+  <p>The Student Dashboard (http://localhost:5173/student/dashboard) is accessible to students and parents. It offers an easy-to-read academic tracking cockpit:</p>
+  
+  <h2>6.1: Subject Proficiency Metrics</h2>
+  <p>The overview tab has visual metrics helping parents monitor progress:</p>
+  <ul>
+    <li><span class="strong-term">Overall Average:</span> Displays the overall academic average score across all graded subjects.</li>
+    <li><span class="strong-term">Mastered (Green):</span> Lists subjects where the student has scored 90% or above.</li>
+    <li><span class="strong-term">On Track (Yellow):</span> Highlights subjects with averages between 80% and 89%.</li>
+    <li><span class="strong-term">Needs Attention (Red):</span> Warns parents of subjects where the average is below 80%. This highlights subjects that need tutoring.</li>
+  </ul>
+
+  <h2>6.2: Subject Details & Grades Table</h2>
+  <p>The main table lists each subject, the teacher's name, quarters completed, a progress bar representing the average score, and a text indicator of the student's standing. Clicking on sorting columns allows sorting subjects by name or average score.</p>
+
+  <h2>6.3: Specialized Student Navigation Tabs</h2>
+  <p>Through the menu tabs, students or parents can access:</p>
+  <ul>
+    <li><span class="strong-term">Announcements:</span> School announcements published by the administration.</li>
+    <li><span class="strong-term">Detailed Academics:</span> Detailed, quarter-by-quarter grids showing grade numbers for all subjects.</li>
+    <li><span class="strong-term">Achievements & Awards:</span> Honors, outstanding performance certificates, or extracurricular records.</li>
+    <li><span class="strong-term">Attendance Tracker:</span> Summary charts of monthly school attendance (Days Present vs. Days Absent).</li>
+    <li><span class="strong-term">Enrollment Process:</span> View pre-registration guides, LRN registration info, and enrollment steps.</li>
+    <li><span class="strong-term">Medical Records:</span> Immunization charts, dental health notes, and general check-up reports.</li>
+    <li><span class="strong-term">Request Report Card:</span> Pre-fills form requests to school registrars for official report cards.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 7 -->
+  <a name="technical"></a>
+  <h1>7. TECHNICAL DETAILS & DATA SYNCHRONIZATION</h1>
+  <p>For developers and system administrators, understanding the portal's data sync design is essential:</p>
+  
+  <h2>7.1: Excel Database Format</h2>
+  <p>The central database file is <code>server/data/database.xlsx</code>. It holds 5 key sheets:</p>
+  <ul>
+    <li><span class="strong-term">Users Sheet:</span> Lists accounts with ID, name, role, username, password, gradeLevel, and section.</li>
+    <li><span class="strong-term">Students Sheet:</span> Contains columns for student ID, LRN, name, gender, gradeLevel, section, enrollment status, parentName, and 24 columns for subject grades (e.g., Math_Q1, Math_Q2, etc.).</li>
+    <li><span class="strong-term">Announcements Sheet:</span> Holds columns for title, date, content, and target audiences.</li>
+    <li><span class="strong-term">VALDEZ ES / School Year Sheets:</span> Displays school year summary metrics (enrollment, repeaters, dropouts) for summary pages.</li>
+    <li><span class="strong-term">Baseline_Census Sheet:</span> Tracks original baseline statistics, allowing the backend to calculate modifications.</li>
+  </ul>
+
+  <h2>7.2: Baseline Census & Data Calculations</h2>
+  <p>To synchronize dynamic dashboard changes with the static summary sheets of the Excel workbook, the portal uses a Baseline Tracking System. In <code>excelService.js</code>:</p>
+  <ul>
+    <li>When the system starts, it parses standard values from the sheets into <code>db.schoolYears</code> and caches initial numbers in <code>baselineSchoolYears</code>.</li>
+    <li>When a student is added, deleted, or has their status changed, the service checks differences against the original baseline data using <code>getAdjustments()</code>.</li>
+    <li>Enrollment counts and dropout counts are modified by checking actual database records against baseline values. This prevents data drift, ensuring numbers match what appears in the system registries.</li>
+  </ul>
+
+  <h2>7.3: File Watcher Auto-Reloading</h2>
+  <p>The backend starts a folder watcher on <code>server/data/</code>. If you open <code>database.xlsx</code> in Excel, make edits, and click save, the server automatically reads the changes, increments <code>dataVersion</code>, and notifies active dashboards via standard polling APIs. This keeps the application synchronized without needing to restart the servers.</p>
+
+</body>
+</html>

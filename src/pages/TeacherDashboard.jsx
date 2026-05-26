@@ -29,6 +29,20 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [newExamTitle, setNewExamTitle] = useState('');
   const [newExamDate, setNewExamDate] = useState('');
   const [newExamType, setNewExamType] = useState('Multiple Choice');
+  useEffect(() => {
+    const handleNav = (e) => {
+      if (e.detail && e.detail.tab) {
+        const targetTab = e.detail.tab.toLowerCase();
+        if (targetTab.includes('plan') || targetTab.includes('learning')) setActiveTab(0);
+        else if (targetTab.includes('student')) setActiveTab(1);
+        else if (targetTab.includes('calendar') || targetTab.includes('announc')) setActiveTab(2);
+        else if (targetTab.includes('exam')) setActiveTab(3);
+        else if (targetTab.includes('setting')) setActiveTab(4);
+      }
+    };
+    window.addEventListener('app-navigate', handleNav);
+    return () => window.removeEventListener('app-navigate', handleNav);
+  }, []);
 
   useEffect(() => {
     setTimeout(() => setMountedAnim(true), 100);

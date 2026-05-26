@@ -1,0 +1,177 @@
+
+    
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset="utf-8">
+  <title>Document</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.6; font-size: 11pt; color: #1e293b; padding: 20px; }
+    h1 { color: #1e3a8a; font-size: 20pt; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-top: 30px; margin-bottom: 12px; font-weight: bold; }
+    h2 { color: #2563eb; font-size: 16pt; margin-top: 25px; margin-bottom: 10px; font-weight: bold; }
+    h3 { color: #0f766e; font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
+    p { margin-bottom: 12px; text-align: justify; }
+    ul, ol { margin-top: 5px; margin-bottom: 12px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .strong-term { font-weight: bold; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; font-size: 10.5pt; }
+    th { background-color: #e2e8f0; font-weight: bold; border: 1px solid #94a3b8; padding: 10px; text-align: left; color: #1e293b; }
+    td { border: 1px solid #cbd5e1; padding: 10px; vertical-align: top; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .note { background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #14532d; border-radius: 4px; }
+    .warning-note { background-color: #fff7ed; border-left: 4px solid #ea580c; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #7c2d12; border-radius: 4px; }
+    .title-page { text-align: center; padding-top: 120px; padding-bottom: 120px; }
+    .title { font-size: 28pt; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; }
+    .subtitle { font-size: 16pt; color: #475569; margin-bottom: 60px; font-style: italic; }
+    .school-name { font-size: 13pt; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+    .school-loc { font-size: 11pt; color: #64748b; margin-bottom: 40px; }
+    .info { font-size: 10pt; color: #64748b; margin-top: 100px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+    <div class="title-page">
+      <div class="title">VALDEZ ELEMENTARY SCHOOL PORTAL</div>
+      <div class="subtitle">Step-by-Step Operator Manual & Dashboard User Guide</div>
+      <div class="school-name">Valdez Elementary School</div>
+      <div class="school-loc">Floridablanca, Pampanga</div>
+      <div class="info">
+        Document Version: 1.1<br>
+        Published: May 2026<br>
+        Scope: Admin, Teacher, and Student/Parent Operating Steps
+      </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1>1. Accessing the Portal & Authentication</h1>
+    <p>Users access their respective portals via the centralized login interface (http://localhost:5173/login). The web application redirects users to their designated dashboard route depending on their verified role in the User sheet database. Default accounts are listed below:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Full Name</th>
+          <th>Designated Role</th>
+          <th>Username</th>
+          <th>Password</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A001</td>
+          <td>Admin User</td>
+          <td><strong>Admin</strong></td>
+          <td>admin</td>
+          <td>password123</td>
+        </tr>
+        <tr>
+          <td>T101</td>
+          <td>Maria Santos</td>
+          <td><strong>Teacher</strong></td>
+          <td>teacher_maria</td>
+          <td>password123</td>
+        </tr>
+        <tr>
+          <td>T3243</td>
+          <td>Ritch Nuguid</td>
+          <td><strong>Teacher</strong></td>
+          <td>ritchnuguid</td>
+          <td>password123</td>
+        </tr>
+        <tr>
+          <td>S201</td>
+          <td>Juan Dela Cruz</td>
+          <td><strong>Student / Parent</strong></td>
+          <td>student_juan</td>
+          <td>password123</td>
+        </tr>
+        <tr>
+          <td>S1965_login</td>
+          <td>Eleanor Vance</td>
+          <td><strong>Student / Parent</strong></td>
+          <td>eleanorvance</td>
+          <td>password123</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>💡 NOTE:</strong> New accounts are generated automatically when a student or teacher record is added. The username defaults to their lowercase first and last name combined, and the temporary password is set to 'password123'.
+    </div>
+
+    <h1>2. Operator Guide: Administrator Portal</h1>
+    <p>The Admin Dashboard (/admin) serves as the primary administration cockpit. Administrators can review school statistics, manage class records, edit baseline year data, export the database, and configure AI parameters.</p>
+
+    <h2>2.1 Stats Cards & School Year Selection</h2>
+    <p>The top cards display real-time school statistics for the active school year. Select a school year from the dropdown list on the upper-right corner of the dashboard to display historical statistics (such as S.Y. 2025-2026 or S.Y. 2021-2022). Dashboard values are recalculated automatically:</p>
+    <ul>
+      <li><span class="strong-term">Total Enrollment:</span> The sum of active students currently registered in the database for the active year.</li>
+      <li><span class="strong-term">Total Dropouts:</span> The count of students flagged with the 'Dropped' status, indicating unenrollment.</li>
+      <li><span class="strong-term">Active Faculty:</span> The total number of teacher accounts assigned to the school year roster.</li>
+      <li><span class="strong-term">Infrastructure:</span> Indicators summarizing repeaters and physical infrastructure capacity.</li>
+    </ul>
+
+    <h2>2.2 Updating School Year & Census Metrics</h2>
+    <p>To modify school statistics or class structures:</p>
+    <ol>
+      <li>Click the <span class="strong-term">'Edit Year Statistics'</span> button near the top statistics display.</li>
+      <li>A modal will open, displaying grade levels (Kinder to Grade 6). Enter the enrollment, repeater counts, dropout counts, classrooms count, and seats capacity.</li>
+      <li>Modify the values for the grades and click <span class="strong-term">'Save Changes'</span>. The portal updates the spreadsheet, and metrics recalculate immediately.</li>
+    </ol>
+    <div class="note">
+      <strong>💡 NOTE:</strong> Use the 'Compare Years' feature to view multi-year growth lines, bar charts, and monthly event logs detailing typhoon shifts or school event timelines.
+    </div>
+
+    <h2>2.3 Student & Teacher Registries</h2>
+    <p>To manage student and teacher details, select the Student or Faculty tab from the sidebar:</p>
+    <ul>
+      <li><span class="strong-term">Adding a Record:</span> Click '+ Add Student' or '+ Add Teacher' to open the registration forms. Enter the required registry data (LRN, grade level, section, parent details, phone, email, etc.) and submit.</li>
+      <li><span class="strong-term">Modifying Status:</span> Toggle the student status dropdown in the registry table from 'Enrolled' to 'Dropped' to instantly update the enrollment stats card.</li>
+      <li><span class="strong-term">Deleting a Record:</span> Click 'Delete' next to a row to permanently remove a record from the database sheets.</li>
+    </ul>
+
+    <h2>2.4 Excel Import / Export Tools</h2>
+    <p>To perform bulk data operations, click 'Database Tool' in the Admin sidebar:</p>
+    <ul>
+      <li><span class="strong-term">Backup Database:</span> Click 'Export Database' to compile and download all system registries, grading sheets, and configurations into a structured Excel workbook.</li>
+      <li><span class="strong-term">Roster Template:</span> Click 'Download Template' to download a clean Excel sheet formatted to matching Department of Education standards.</li>
+      <li><span class="strong-term">Bulk Import:</span> Upload an updated census sheet via the 'Import Census File' button to quickly refresh baseline statistics.</li>
+    </ul>
+
+    <h1>3. Operator Guide: Teacher Portal</h1>
+    <p>The Teacher Dashboard (/teacher/dashboard) is tailored for classroom instruction. It displays only information relevant to the teacher's grade assignment (e.g. Grade 1 - Mabini).</p>
+
+    <h2>3.1 Student Grades Management</h2>
+    <p>To enter or update student quarterly marks:</p>
+    <ol>
+      <li>Select the <span class="strong-term">'Students'</span> tab from the Teacher sidebar to display your section roster.</li>
+      <li>Click on a student's name in the table to display their detailed grading sheet.</li>
+      <li>The grid displays subjects (Math, Science, English, Filipino, MAPEH, Makabayan) across Q1, Q2, Q3, and Q4 columns. Double-click or select an input box to edit the grade (0 to 100).</li>
+      <li>Click <span class="strong-term">'Save Changes'</span> to execute database updates, recalculate averages, and update student summaries.</li>
+    </ol>
+
+    <h2>3.2 Leaderboard & Exam Schedulers</h2>
+    <p>The default tab features advice cards next to a class Leaderboard. The leaderboard ranks students based on their overall quarterly average. To schedule exams, navigate to the 'Exams' tab and click '+ Create Exam' to log titles, schedules, and question formats.</p>
+
+    <h1>4. Operator Guide: Student/Parent Portal</h1>
+    <p>The Student Dashboard (/student/dashboard) is designed for students and parents. It offers an easy-to-use academic console:</p>
+    <ul>
+      <li><span class="strong-term">Subject Proficiency Overview:</span> Reflects the cumulative academic performance of the student. Subjects are automatically categorized: Mastered (Green, avg >= 90), On Track (Yellow, avg 80-89), and Needs Attention (Red, avg < 80).</li>
+      <li><span class="strong-term">Grades & Progress Grid:</span> The main table displays subjects, teacher names, completed quarters, progress bars, and academic standing labels.</li>
+      <li><span class="strong-term">Specialized Services:</span> Use navigation tabs to review detailed quarter-by-quarter grids, download award certificates, review monthly attendance logs, check medical records, and submit report card request forms.</li>
+    </ul>
+    
+</body>
+</html>
+
+  

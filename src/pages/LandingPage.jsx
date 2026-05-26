@@ -57,8 +57,8 @@ const LandingPage = () => {
     stem: {
       label: 'Innovative STEM Program',
       title: 'Igniting Curiosity Through Science & Technology',
-      desc: 'Our advanced STEM curriculum is designed to transform passive learners into active creators. From robotics labs to coding fundamentals, we prepare students for the modern digital era.',
-      bullet1: 'Hands-on robotics and engineering design labs',
+      desc: 'Our advanced STEM curriculum is designed to transform passive learners into active creators. From hands-on science labs to early coding concepts, we prepare students for the modern digital era.',
+      bullet1: 'Hands-on science experiments and creative design projects',
       bullet2: 'Age-appropriate block coding and digital citizenship courses',
       bullet3: 'Annual district science exposition and collaborative projects',
       img: '/valdez-bg.jpg',
@@ -308,7 +308,7 @@ const LandingPage = () => {
           </div>
           <div className="stat-divider"></div>
           <div className="stat-item">
-            <span className="stat-number">12:1</span>
+            <span className="stat-number">33:1</span>
             <span className="stat-label">Student-Teacher Ratio</span>
           </div>
           <div className="stat-divider"></div>
@@ -377,7 +377,7 @@ const LandingPage = () => {
               onClick={() => setActiveTab('stem')}
             >
               <Code size={18} />
-              STEM & Robotics
+              STEM Education
             </button>
             <button 
               className={`tab-btn ${activeTab === 'arts' ? 'active' : ''}`}

@@ -1,0 +1,132 @@
+
+    
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset="utf-8">
+  <title>Document</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.6; font-size: 11pt; color: #1e293b; padding: 20px; }
+    h1 { color: #1e3a8a; font-size: 20pt; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-top: 30px; margin-bottom: 12px; font-weight: bold; }
+    h2 { color: #2563eb; font-size: 16pt; margin-top: 25px; margin-bottom: 10px; font-weight: bold; }
+    h3 { color: #0f766e; font-size: 13pt; margin-top: 20px; margin-bottom: 8px; font-weight: bold; }
+    p { margin-bottom: 12px; text-align: justify; }
+    ul, ol { margin-top: 5px; margin-bottom: 12px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .strong-term { font-weight: bold; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; font-size: 10.5pt; }
+    th { background-color: #e2e8f0; font-weight: bold; border: 1px solid #94a3b8; padding: 10px; text-align: left; color: #1e293b; }
+    td { border: 1px solid #cbd5e1; padding: 10px; vertical-align: top; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .note { background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #14532d; border-radius: 4px; }
+    .warning-note { background-color: #fff7ed; border-left: 4px solid #ea580c; padding: 12px 18px; margin: 18px 0; font-style: italic; color: #7c2d12; border-radius: 4px; }
+    .title-page { text-align: center; padding-top: 120px; padding-bottom: 120px; }
+    .title { font-size: 28pt; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; }
+    .subtitle { font-size: 16pt; color: #475569; margin-bottom: 60px; font-style: italic; }
+    .school-name { font-size: 13pt; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+    .school-loc { font-size: 11pt; color: #64748b; margin-bottom: 40px; }
+    .info { font-size: 10pt; color: #64748b; margin-top: 100px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+    <div class="title-page">
+      <div class="title">VALDEZ ELEMENTARY SCHOOL PORTAL</div>
+      <div class="subtitle">Comprehensive Dashboard Architecture & System Overview</div>
+      <div class="school-name">Valdez Elementary School</div>
+      <div class="school-loc">Floridablanca, Pampanga</div>
+      <div class="info">
+        Document Version: 1.1<br>
+        Published: May 2026<br>
+        Architecture Model: Express API + React + Excel Sync Engine
+      </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1>1. System Concept & Dashboard Ecosystem</h1>
+    <p>The Valdez Elementary School Portal dashboard system represents a paradigm shift in elementary school management by bridging the gap between standard spreadsheet data entry and modern, reactive web analytics. Instead of maintaining siloed records, school administration, teaching faculty, and student guardians share a unified web interface built with a React frontend and served by an Express backend server. Underpinning this system is a two-way synchronization engine that links to a local Microsoft Excel workbook file (database.xlsx), bringing operational database-like updates to standard spreadsheets without complex DB installs.</p>
+    <p>The platform is structured around a three-dashboard architecture tailored to distinct security roles:</p>
+    <ul>
+      <li><span class="strong-term">Admin Dashboard:</span> Full school operations control, census year statistics editing, historical timeline logs, bulk database imports/exports, and custom configurations.</li>
+      <li><span class="strong-term">Teacher Dashboard:</span> Class management, advisee rosters, leaderboard performance rankings, quarterly grade editing (Q1-Q4), and preparative exam schedulers.</li>
+      <li><span class="strong-term">Student / Parent Dashboard:</span> Academic progress tracking, quarterly grades inspection grid, attendance charts, award certificates list, medical records, and official report card request forms.</li>
+    </ul>
+
+    <h1>2. Shared Visual Language & Core Design Tokens</h1>
+    <p>The portal is styled using premium, handcrafted Vanilla CSS components that follow modern web design directives. Key visual elements include:</p>
+    <ul>
+      <li><span class="strong-term">Responsive Light/Dark Mode:</span> Integrated theme controllers allow users to toggle between a professional dark layout (sleek slate tones, neon status badges) and an accessible light layout (warm off-whites, high-contrast typography).</li>
+      <li><span class="strong-term">Color-Coded Status Systems:</span> Vibrant status pills indicating student standing (e.g. Mastered - Green, On Track - Yellow, Needs Attention - Red) instead of standard raw scores, aiding quick visual recognition.</li>
+      <li><span class="strong-term">Interactive Data Visualizations:</span> Visual charts built via Recharts (enrollment growth lines, classroom usage bars, student subject proficiency radial gauges, and attendance distributions) render real-time database queries with animations.</li>
+      <li><span class="strong-term">Micro-Animations:</span> Subtle CSS transitions on card hovers, sidebar selections, and button clicks produce a highly responsive, native-application feel.</li>
+    </ul>
+
+    <h1>3. Real-Time Excel Integration & File Watching</h1>
+    <p>A distinct feature of the Valdez Portal is its Live Sync Engine. In standard school settings, staff are highly familiar with Excel spreadsheets. The backend system utilizes Node.js and the xlsx (SheetJS) package to parse and modify 'server/data/database.xlsx' in real-time:</p>
+    <ul>
+      <li><span class="strong-term">Excel File Watcher:</span> The Express server launches a directory listener on the 'server/data/' folder. Any manual update made directly in the Excel workbook file on the server machine triggers a watcher callback. The server immediately re-parses the sheets and updates active web dashboards via dynamic HTTP polling.</li>
+      <li><span class="strong-term">Two-Way Write Back:</span> When administrators modify school statistics or teachers input quarterly grades on the web client, the system executes an API request. The Excel Service loads the workbook, edits the target sheet cells, and saves the file to disk instantly. Dashboards update in real-time, keeping the spreadsheet synchronized with the web.</li>
+      <li><span class="strong-term">Data Drift Prevention:</span> A Baseline Tracking System preserves original census figures under the 'Baseline_Census' sheet. This lets the backend calculate adjustments from actual enrolled student profiles and display correct figures on the dashboard cards without hard-coding.</li>
+    </ul>
+    
+    <div class="note">
+      <strong>💡 NOTE:</strong> The live watcher system automatically increments an internal 'dataVersion' token when updates occur. The React frontend monitors this token to trigger UI updates without full page reloads, ensuring zero-lag state synchronization.
+    </div>
+
+    <h1>4. Key Performance Indicators (KPIs) & Analytics</h1>
+    <p>The portal calculates critical educational indicators from student lists and baseline sheets:</p>
+    <ul>
+      <li><span class="strong-term">Active Enrollment:</span> Reflects the actual active student count in the registry for the selected academic year.</li>
+      <li><span class="strong-term">Dropout Metric:</span> Accumulates the number of students assigned the 'Dropped' status, assisting administrators in dropout prevention strategies.</li>
+      <li><span class="strong-term">Infrastructure & Seats:</span> Monitors classroom capacity by comparing class rosters against seat counts, alerting administrators of over-capacity classes.</li>
+      <li><span class="strong-term">Year-on-Year Trend Analysis:</span> Shows Year-on-Year growth rates in enrollment, comparisons of repeaters, and historical event logs detailing shifts between face-to-face and modular learning.</li>
+    </ul>
+
+    <h1>5. Security & Access Control Matrix</h1>
+    <p>The portal enforces strict, role-based access control (RBAC). Pages inspect session storage properties upon render to verify authorizations:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Dashboard Role</th>
+          <th>Accessible URL Routes</th>
+          <th>Database Permissions</th>
+          <th>Target Audience</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Administrator</strong></td>
+          <td>/admin</td>
+          <td>Read & Write all sheets (Users, Students, Census, Memory)</td>
+          <td>School Principals, Head Registrars, IT Staff</td>
+        </tr>
+        <tr>
+          <td><strong>Teacher</strong></td>
+          <td>/teacher/dashboard</td>
+          <td>Read class roster; Write quarterly grades (Q1-Q4) & Exams</td>
+          <td>Faculty Members, Grade Advisers</td>
+        </tr>
+        <tr>
+          <td><strong>Student / Parent</strong></td>
+          <td>/student/dashboard</td>
+          <td>Read-only access to individual grades, attendance, medical info</td>
+          <td>Students, Parents, Guardians</td>
+        </tr>
+      </tbody>
+    </table>
+    
+</body>
+</html>
+
+  
